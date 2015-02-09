@@ -65,23 +65,18 @@ public class AutoProgram {
 		}
 	}
 
-	//TODO: test this 
-	public void rampToSpeed(Talon talon, double speed){
-		if (speed >= 0.0) {	//ramp up to positive speed
-			if (talon.get() < speed) {
-				//TODO: rewrite using multiplication factor; 
-				//talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a zero.
-				talon.set (talon.get() + TALONRAMPSPEED); //add 10% each time
-			} else {
+	//TODO: test this
+	public void rampToSpeed(Talon talon, double speed) {
+		if (speed >= 0.0) { //ramp up to positive speed
+			if (talon.get() < speed)
+				talon.set(talon.get() == 0 ? 0.1 : talon.get() * TALONRAMPSPEED); //multiply 10% each time (exponentially - 25*20ms)
+			else
 				talon.set(speed);
-			}
 		} else { //going negative
-			if (speed < talon.get()) {
-				talon.set (talon.get() - TALONRAMPSPEED); //subtract 10% each time
-			} else {
+			if (talon.get() > speed)
+				talon.set(talon.get() == 0 ? -0.1 : talon.get() * TALONRAMPSPEED); //divide by 10% each time (exponentially - 25*20ms)
+			else
 				talon.set(speed);
-			}
 		}
 	}
-
 }
