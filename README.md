@@ -1,12 +1,17 @@
-Notes:
+# Herbert-2015
 
+## This is the final repository for Recycle Rush.
+
+##Notes:
+
+Who is user "sleekNfoxy"?
 Assuming using two XBOX controllers. 
 Port 0 = driver
 Port 1 = control arm
 
 ***** Search for //FIXME or //TODO to see what needs to be done
 
-
+//Do NOT mess with .gitignore . That caused tons of problems for us earlier.
 
 //get a timer to work
 
