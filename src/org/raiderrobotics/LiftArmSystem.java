@@ -95,7 +95,6 @@ public class LiftArmSystem {
         rightDoneMoving = false;
         leftDoneMoving = false;
 
-
         if(debug)
             System.out.println("[Arm Debug] Reset!");
     }
@@ -107,6 +106,31 @@ public class LiftArmSystem {
      * Must be called periodically (usually in teleopPeriodic()).
      */
     public void tick() {
+        //Check for manual drive
+        double move = xbox.getRawAxis(3) - xbox.getRawAxis(2);
+        if(Math.abs(move) > 0.15){
+            mode = 0; //Reset the current mode
+
+            //Percentage at what the talons will move
+            //when one is going faster than the other one
+            double rightCut = 0.95;
+            double leftCut = 0.95;
+
+            //Determining if one talon is moving faster than the other one
+            double right = Math.abs(getRightEncPos()) > Math.abs(getLeftEncPos())
+                    ? rightCut
+                    : 1;
+            double left = Math.abs(getLeftEncPos()) > Math.abs(getRightEncPos())
+                    ? leftCut
+                    : 1;
+
+            //Move the talons based on their determined speeds
+            leftTalon.set(move * left);
+            rightTalon.set(move * right);
+
+            return;
+        }
+
         //Check the mode
         //This is why you use Command Base .-.
 
