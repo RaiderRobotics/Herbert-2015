@@ -21,7 +21,7 @@ public class LiftArmSystem {
     Joystick xbox;
 
     int mode = 0;
-
+    final int BALANCE_MODE = 99;
     public boolean debug;
 
     //I'll only use it for debugging
@@ -32,6 +32,8 @@ public class LiftArmSystem {
     //This is why you use Command Base .-.
     private boolean rightDoneMoving;
     private boolean leftDoneMoving;
+    private int balancePosition=0;
+    private boolean balanceRight;
 
 /*	final static double L_LIFTSPEED = 0.8;
 	final static double R_LIFTSPEED = 0.8;
@@ -201,7 +203,7 @@ public class LiftArmSystem {
                     rightTalon.setPosition(0);
                     leftTalon.setPosition(0);
 
-                    mode = 0;
+                    mode = BALANCE_MODE;
                 }
                 //Not done? Move
                 else {
@@ -223,7 +225,7 @@ public class LiftArmSystem {
                     rightTalon.setPosition(0);
                     leftTalon.setPosition(0);
 
-                    mode = 0;
+                    mode = BALANCE_MODE;
                 }
                 //Not done? Move
                 else {
@@ -231,11 +233,46 @@ public class LiftArmSystem {
                 }
                 break;
 
+            //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
+            case BALANCE_MODE:
+                if(balancePosition == 0){
+                    if(getRightEncPos() > getLeftEncPos()){
+                        balancePosition = getRightEncPos();
+                        balanceRight = true;
+                    } else if(getLeftEncPos() > getRightEncPos()){
+                        balancePosition = getLeftEncPos();
+                        balanceRight = false;
+                    }
+
+                    if(debug)
+                        System.out.println("Balance position: "+balancePosition+" ; Right: "+balanceRight);
+                }
+
+                if(balanceRight){ //If moving the right talon
+                    if(getRightEncPos() > balancePosition){ //If not in place yet
+                        rightTalon.set(-0.5);
+                        break;
+                    } else
+                        rightTalon.set(0);
+
+                } else { //No? Then we might probably be moving the left talon
+                    if(getLeftEncPos() > balancePosition){ //If not in place yet
+                        leftTalon.set(-0.5);
+                        break;
+                    } else
+                        leftTalon.set(0);
+                }
+
+                mode = 0;
+
+                break;
+
             //Emergency stop button
             default:
                 //Reset stuff
                 rightDoneMoving = false;
                 leftDoneMoving = false;
+                balancePosition = 0;
 
                 rightTalon.set(0);
                 leftTalon.set(0);
