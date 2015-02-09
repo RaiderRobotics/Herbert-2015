@@ -43,7 +43,7 @@ public class DriveTrainGyro extends Gyro {
 
 	void turnMinus45() {
 		isTurning = true;
-		targetAngle = this.getAngle() + 45.0;
+		targetAngle = this.getAngle() - 45.0;
 	}
 
 	void cancelTurning() {

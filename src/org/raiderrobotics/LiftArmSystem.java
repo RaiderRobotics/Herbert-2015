@@ -8,13 +8,15 @@ public class LiftArmSystem {
 	//TODO: constants maybe?? should be moved to RobotMap when this class is working 
 	final static int TALON3_CAN_ID = 3;
 	final static int TALON4_CAN_ID = 4;
-	final static double LIFTSPEED = 0.8;
+	final static double L_LIFTSPEED = 0.8;
+	final static double R_LIFTSPEED = 0.8;
 	final static double RAMPRATE = 0.3;  //volts per second ?
 			
-	final static int POSITION_ONE_L = 500;	//number of encoder ticks to get to position 1
-	final static int POSITION_ONE_R = 550;	//number of encoder ticks to get to position 1
-	final static int POSITION_TOP_L = 700;	//number of encoder ticks to get to top position 
-	final static int POSITION_TOP_R = 700;	//number of encoder ticks to get to top position 
+	final static int POSITION_ONE_L = 4000;	//number of encoder ticks to get to position 1
+	final static int POSITION_ONE_R = 4000;	//number of encoder ticks to get to position 1
+	//FIXME: get correct numbers
+	final static int POSITION_TOP_L = 4700;	//number of encoder ticks to get to top position 
+	final static int POSITION_TOP_R = 4700;	//number of encoder ticks to get to top position 
 	
 	
 	private CANTalon leftTalon = new CANTalon(TALON3_CAN_ID);
@@ -39,20 +41,17 @@ public class LiftArmSystem {
 		rightTalon.changeControlMode(ControlMode.PercentVbus);
 //TODO: test this
 		//rightTalon.setVoltageRampRate(RAMPRATE);
-		
-		rightTalon.reverseOutput(true);
-		leftTalon.reverseOutput(false);
 
 	}
 
 	//instance methods
 	void moveToZero() {
-		isMoving = true;
+		isMoving = true; //will not work
 		//TODO: need to go down until hit switches
 	}
 
 	void moveToOne() {
-		isMoving = true;
+		isMoving = true; //use encoders to go somewhere
 		leftTargetPos = POSITION_ONE_L;
 		rightTargetPos = POSITION_ONE_R;
 	}
@@ -64,47 +63,52 @@ public class LiftArmSystem {
 	}
 
 	void stop() {
-		leftTalon.disable(); //stopMotor() is deprecated and replaced by "disable()"
-		rightTalon.disable();
+		isMoving = false;
+		leftTalon.set(0.0);
+		rightTalon.set(0.0);
 	}
 
 	void continueMoving() {
 		
-/*** I'm not sure what this is for ***		
-		//Percentage at what the talons will move 
-		//when one is going faster than the other one
-		double rightCut = 0.95;
-		double leftCut = 0.95;
-
-		//Determining if one talon is moving faster than the other one 
-		double rightMultiplier = Math.abs(rightTalon.getEncPosition()) > Math.abs(leftTalon.getEncPosition()) 
-				? rightCut : 1;
-		double leftMultiplier = Math.abs(leftTalon.getEncPosition()) > Math.abs(rightTalon.getEncPosition()) 
-				? leftCut : 1;
-
-		//Move the talons based on their determined speeds
-		leftTalon.set(LIFTSPEED * leftMultiplier);
-		rightTalon.set(LIFTSPEED * rightMultiplier);
-****/
-		
 		double dl = leftTargetPos - leftTalon.getEncPosition(); //NOTE: this implies that the encoder is plugged into the TalonSRX
 		double dr = rightTargetPos - rightTalon.getEncPosition();
-
-		if (dl < 5.0) {
+		
+		// Assume we are still moving, so they aren't at the end point, yet
+		boolean bLeftInPosition = false;
+		boolean bRightInPosition = false;
+		
+//		//check how close to final position both are.
+//		if (Math.abs(dl) < 5.0 && Math.abs(dr) < 5.0) {
+//			isMoving = false;
+//			return;
+//		}
+		//TODO see if it wobbles.  It it wobbles the imbalance increases
+		if (dl < 15.0) {
+			//set a boolean to true
 			leftTalon.set(0.0);
+			bLeftInPosition = true;
 		} else {
-			leftTalon.set(LIFTSPEED);		
+			leftTalon.set(L_LIFTSPEED);		
 		}
 		
-		if (dr < 5.0) {
+		if (dr < 15.0) {
 			rightTalon.set(0.0);
+			bRightInPosition = true;
 		} else {
-			rightTalon.set(LIFTSPEED);
+			rightTalon.set(R_LIFTSPEED);
 		}
-
-		if (leftTalon.get() == 0.0 && rightTalon.get() == 0.0) {
+		
+		// If both arms are in position, then they aren't moving
+		if ( bLeftInPosition && bRightInPosition )
+		{
 			isMoving = false;
 		}
+		
+		//Old code. Do not compare to zero. Check to see if motors are stopped.
+//		if (leftTalon.get() == 0.0 && rightTalon.get() == 0.0) {
+//			isMoving = false;
+//		}
+	
 	}
 
 	boolean isMoving() { return isMoving; }

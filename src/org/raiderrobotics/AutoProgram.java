@@ -65,10 +65,12 @@ public class AutoProgram {
 		}
 	}
 
-	//TODO: make this handle negative speeds too
+	//TODO: test this 
 	public void rampToSpeed(Talon talon, double speed){
 		if (speed >= 0.0) {	//ramp up to positive speed
 			if (talon.get() < speed) {
+				//TODO: rewrite using multiplication factor; 
+				//talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a zero.
 				talon.set (talon.get() + TALONRAMPSPEED); //add 10% each time
 			} else {
 				talon.set(speed);

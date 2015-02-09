@@ -83,6 +83,8 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopPeriodic() {
+		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
+		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
 		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
 		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
@@ -90,13 +92,12 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
 		
 		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
-		//add a button, moveToZero, backup 1 tote distance 
+		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance
 		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
 		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
 		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
 		
-		normalDrive();
-
+		//gyro1.doTurn();
 		if (gyro1.isTurning()) gyro1.continueTurning();
 		if (armControl.isMoving()) armControl.continueMoving();
 		
