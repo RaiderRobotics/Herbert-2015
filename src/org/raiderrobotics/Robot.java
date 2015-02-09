@@ -26,8 +26,6 @@ public class Robot extends IterativeRobot {
 	Image imageFrame;
 
 	public void robotInit() {
-		armControl = new LiftArmSystem();
-
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
 
@@ -49,28 +47,30 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
+        armControl = new LiftArmSystem(xbox360arm);
+		armControl.debug = true;
+
+        encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL);
 		autoProgram.setProgram(AUTO_RECYCLE);
-		
+
 		setUpSmartDashboard();
 		setUpCamera();
 
 	}
 
 	public void disabledInit() {
-		armControl.stop();
+        armControl.reset();
 		talon1.stopMotor();
-		talon2.stopMotor();		
+		talon2.stopMotor();
 		NIVision.IMAQdxStopAcquisition(cameraSession);
 	}
 
 	public void autonomousInit() {
 		//this will set the Gyro so that zero is the direction that it is pointing when Autonomous begins.
 		gyro1.reset();
-		armControl.moveToZero();
 		autoProgram.init();
 	}
 
@@ -87,20 +87,18 @@ public class Robot extends IterativeRobot {
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
 		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
-		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
+		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
-		
-		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
-		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance
-		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
-		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
-		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
-		
+
+        //There's no need to have everything controlled in the main class.
+        // There's a reason why we have a separate class for arm control.
+        // Even the joystick's name suggests that it has nothing to do but the arm control alone.
+        armControl.tick();
+
 		//gyro1.doTurn();
 		if (gyro1.isTurning()) gyro1.continueTurning();
-		if (armControl.isMoving()) armControl.continueMoving();
-		
+
  		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
 		//NIVision.imaqDrawShapeOnImage(imageFrame, imageFrame, new NIVision.Rect(10, 10, 100, 100) , DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
@@ -108,10 +106,11 @@ public class Robot extends IterativeRobot {
 	}
 
 	// Drive the robot normally, apply speed boost if needed
+	//TODO: this is not called from anywhere - fix it
 	private void normalDrive() {
 		//Change "L" to "R" if drivers want to use the right xbox joystick for driving
-		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS); 
-		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS); 
+		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS);
+		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS);
 		double stickMove = stickX * stickX + stickY * stickY;
 
 		if (stickMove > 0.05) gyro1.cancelTurning();
@@ -128,6 +127,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void testInit() {
+		//Why? .-.
 		System.out.println("Default IterativeRobot.testInit() method... Overload me!");
 	}
 
@@ -154,7 +154,7 @@ public class Robot extends IterativeRobot {
 		//Sendable chooser should create a list of selectable objects(they do nothing)
 		SendableChooser chooser1 = new SendableChooser();
 
-		chooser1.addDefault("Deafault", "x");
+		chooser1.addDefault("Default", "x");
 		chooser1.addObject("Option 1", "y");
 		chooser1.addObject("Option 2", "z");
 		SmartDashboard.putData("Chooser", chooser1);
