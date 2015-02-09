@@ -72,6 +72,7 @@ public final class RobotMap {
 	final static double AUTO_SPEED_FWD = 0.8;
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
 	
+	final static double TALONRAMPSPEED = 0.1;
 
 	//global variables that are NOT final
 	

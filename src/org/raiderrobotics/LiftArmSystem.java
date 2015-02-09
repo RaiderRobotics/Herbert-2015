@@ -12,7 +12,7 @@ public class LiftArmSystem {
 	final static double RAMPRATE = 0.3;  //volts per second ?
 			
 	final static int POSITION_ONE_L = 500;	//number of encoder ticks to get to position 1
-	final static int POSITION_ONE_R = 500;	//number of encoder ticks to get to position 1
+	final static int POSITION_ONE_R = 550;	//number of encoder ticks to get to position 1
 	final static int POSITION_TOP_L = 700;	//number of encoder ticks to get to top position 
 	final static int POSITION_TOP_R = 700;	//number of encoder ticks to get to top position 
 	

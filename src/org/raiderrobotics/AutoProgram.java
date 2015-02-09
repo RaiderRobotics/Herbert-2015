@@ -67,10 +67,18 @@ public class AutoProgram {
 
 	//TODO: make this handle negative speeds too
 	public void rampToSpeed(Talon talon, double speed){
-		if (talon.get() < speed) {
-			talon.set (talon.get() + 0.1); //add 10% each time
-		} else {
-			talon.set(speed);
+		if (speed >= 0.0) {	//ramp up to positive speed
+			if (talon.get() < speed) {
+				talon.set (talon.get() + TALONRAMPSPEED); //add 10% each time
+			} else {
+				talon.set(speed);
+			}
+		} else { //going negative
+			if (speed < talon.get()) {
+				talon.set (talon.get() - TALONRAMPSPEED); //subtract 10% each time
+			} else {
+				talon.set(speed);
+			}
 		}
 	}
 

@@ -4,7 +4,6 @@
 
 ##Notes:
 
-Who is user "sleekNfoxy"?
 Assuming using two XBOX controllers. 
 Port 0 = driver
 Port 1 = control arm
@@ -23,3 +22,13 @@ Port 1 = control arm
 
 //AUTONOMOUS MODE DO NOT USE -- UNTIL IT HANDLES REVERSE SPEED IN RAMP UP SECTION (for right talon)
 //NOTE: there is no limit switch coded in the arm movement so DO NOT USE IT!!!
+
+=========================
+TODO:
+* test drive train
+- fix gyros
+- test smart dashboard
+- test camera
+- fix autonomous
+* fix arm (switches need fixing)
+
