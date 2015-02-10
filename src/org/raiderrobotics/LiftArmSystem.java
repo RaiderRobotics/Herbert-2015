@@ -194,9 +194,6 @@ public class LiftArmSystem {
                     rightDoneMoving = false;
                     leftDoneMoving = false;
 
-                    rightTalon.setPosition(0);
-                    leftTalon.setPosition(0);
-
                     mode = BALANCE_MODE;
                 }
                 //Not done? Move
@@ -215,9 +212,6 @@ public class LiftArmSystem {
 
                     rightDoneMoving = false;
                     leftDoneMoving = false;
-
-                    rightTalon.setPosition(0);
-                    leftTalon.setPosition(0);
 
                     mode = BALANCE_MODE;
                 }
