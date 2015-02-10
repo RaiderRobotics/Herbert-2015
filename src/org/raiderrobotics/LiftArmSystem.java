@@ -35,17 +35,6 @@ public class LiftArmSystem {
     private int balancePosition=0;
     private boolean balanceRight;
 
-/*	final static double L_LIFTSPEED = 0.8;
-	final static double R_LIFTSPEED = 0.8;
-	final static double RAMPRATE = 0.3;  //volts per second ?
-			
-	final static int POSITION_ONE_L = 4000;	//number of encoder ticks to get to position 1
-	final static int POSITION_ONE_R = 4000;	//number of encoder ticks to get to position 1
-	//FIXME: get correct numbers
-	final static int POSITION_TOP_L = 4700;	//number of encoder ticks to get to top position 
-	final static int POSITION_TOP_R = 4700;	//number of encoder ticks to get to top position
-*/
-
     //constructor -- this should be a singleton pattern so you can't make more than one object
     //Why would you? I can make it static and have static reference to it from within the Robot class - but that's a pain.
     //Unless one messes with it and creates a bunch of objects, it's fine as it is.
@@ -63,6 +52,9 @@ public class LiftArmSystem {
         //configure both talons
         this.leftTalon = new CANTalon(RobotMap.TALON3_CAN_ID);
         this.rightTalon = new CANTalon(RobotMap.TALON4_CAN_ID);
+        
+        leftSwitch = new DigitalInput(4);
+        rightSwitch = new DigitalInput(5);
 
         leftTalon.set(0);
         leftTalon.changeControlMode(ControlMode.PercentVbus);
@@ -96,6 +88,8 @@ public class LiftArmSystem {
         //This is why you use Command Base .-.
         rightDoneMoving = false;
         leftDoneMoving = false;
+        
+        mode = 0;
 
         if(debug)
             System.out.println("[Arm Debug] Reset!");
@@ -171,7 +165,7 @@ public class LiftArmSystem {
             //Move to rest button
             case RobotMap.XBOX_BTN_A:
                 //Check if done
-                if (!rightSwitch.get() && !leftSwitch.get()) {
+                if (rightSwitch.get() && leftSwitch.get()) {
                     //Reset
                     rightTalon.set(0);
                     leftTalon.set(0);
@@ -183,8 +177,8 @@ public class LiftArmSystem {
                 }
                 //Not done? Move
                 else {
-                    rightTalon.set(!rightSwitch.get() ? 0 : -speed);
-                    leftTalon.set(!leftSwitch.get() ? 0 : -speed);
+                    rightTalon.set(rightSwitch.get() ? 0 : -speed);
+                    leftTalon.set(leftSwitch.get() ? 0 : -speed);
                 }
 
                 break;
@@ -281,28 +275,51 @@ public class LiftArmSystem {
 
     //ONLY used by MOVE_TO_MIDDLE and MOVE_TO_TOP modes
     private void moveTo(double targetPos) {
-        double sigR = Math.signum(targetPos - getRightEncPos());
-        double sigL = Math.signum(targetPos - getLeftEncPos());
+        double disR = targetPos - getRightEncPos();
+        double disL = targetPos - getLeftEncPos();
+        
+        double sigR = Math.signum(disR);
+        double sigL = Math.signum(disL);
+
+        double absR = Math.abs(disR);
+        double absL = Math.abs(disL);
+        
+        double slowDown = config.getDouble("slowDown");
+                
+        //If getting close - slow down
+        //I.E.: If position is less than the maximum speed * (100 for example)
+        // than move at a speed between maximum and 0.15
+        if(absR < speed * slowDown) {
+        	double s = disR / slowDown;
+        	sigR *= (s < 0.15 ? 0.15 : s);
+        } else
+        	sigR *= speed;
+        
+        if(absL <= speed * slowDown) {
+        	double s = disL / slowDown;
+        	sigL *= (s < 0.15 ? 0.15 : s);
+        } else
+        	sigL *= speed;
 
         //Move right
         if (!rightDoneMoving) {
-            //If the direction is negative and the arm is mover than the target position - stop
+            //If the direction is negative and the arm is lower than the target position - stop
             //Or if the direction if positive and the arm is higher than the target position - stop
-            if ((sigR < 0 && getRightEncPos() < targetPos) || (sigR > 0 && getRightEncPos() > targetPos)) {
+            if (absR <= 10) {
                 rightDoneMoving = true;
                 rightTalon.set(0);
             } else
-                rightTalon.set(sigR * speed);
+                rightTalon.set(sigR);
         }
 
         //Move left
         if (!leftDoneMoving) {
             //Same as above
-            if ((sigL < 0 && getLeftEncPos() < targetPos) || (sigL > 0 && getLeftEncPos() > targetPos)) {
+            if (absL <= 10) {
                 leftDoneMoving = true;
                 leftTalon.set(0);
             } else
-                leftTalon.set(sigL * speed);
+                leftTalon.set(sigL);
         }
     }
 
