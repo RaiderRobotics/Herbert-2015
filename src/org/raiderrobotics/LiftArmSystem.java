@@ -121,8 +121,13 @@ public class LiftArmSystem {
                     : 1;
 
             //Move the talons based on their determined speeds
-            leftTalon.set(move * left);
-            rightTalon.set(move * right);
+            if((move < 0 && !rightSwitch.get())
+                    || (move > 0 && getRightEncPos() <= config.getDouble("posTop"))) //Check bottom and top limits
+                rightTalon.set(move * right);
+
+            if((move < 0 && !leftSwitch.get())
+                    || (move > 0 && getLeftEncPos() <= config.getDouble("posTop"))) //Check bottom and stop limits
+                leftTalon.set(move * left);
 
             return;
         }
