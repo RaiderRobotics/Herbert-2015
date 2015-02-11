@@ -184,6 +184,13 @@ public class LiftArmSystem {
             if (debug)
                 System.out.println("[Arm Debug] Switched the mode to: Move to top");
         }
+        
+        //Pick up and move to middle
+        else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_R)){
+        	mode = Mode.PICK_UP_TO_MIDDLE;
+        	if (debug)
+                System.out.println("[Arm Debug] Switched the mode to: Pick up and move to top");
+        }
 
 
         //Check the buttons
@@ -238,10 +245,12 @@ public class LiftArmSystem {
             case PICK_UP_TO_MIDDLE:
             	if(moveToRest()) //If at rest
             		mode = Mode.MOVE_TO_MIDDLE;
+            	break;      	
 
             case PICK_UP_TO_TOP:
             	if(moveToRest()) //If at rest
             		mode = Mode.MOVE_TO_TOP;
+            	break;            	
             	
 /* No need
             //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
