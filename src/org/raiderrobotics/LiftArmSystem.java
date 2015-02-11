@@ -192,21 +192,8 @@ public class LiftArmSystem {
             //Move to rest button
             case MOVE_TO_REST:
                 //Check if done
-                if (rightSwitch.get() && leftSwitch.get()) {
-                    //Reset
-                    rightTalon.set(0);
-                    leftTalon.set(0);
-
-                    rightTalon.setPosition(0);
-                    leftTalon.setPosition(0);
-
-                    mode = Mode.STOP;
-                }
-                //Not done? Move
-                else {
-                    rightTalon.set(rightSwitch.get() ? 0 : -speed);
-                    leftTalon.set(leftSwitch.get() ? 0 : -speed);
-                }
+            	if(moveToRest())
+            		mode = Mode.STOP;            	
 
                 break;
 
@@ -247,6 +234,15 @@ public class LiftArmSystem {
                     moveTo(config.getDouble("posTop"));
                 }
                 break;
+                
+            case PICK_UP_TO_MIDDLE:
+            	if(moveToRest()) //If at rest
+            		mode = Mode.MOVE_TO_MIDDLE;
+
+            case PICK_UP_TO_TOP:
+            	if(moveToRest()) //If at rest
+            		mode = Mode.MOVE_TO_TOP;
+            	
 /* No need
             //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
             case BALANCE_MODE:
@@ -343,6 +339,37 @@ public class LiftArmSystem {
             } else
                 leftTalon.set(sigL);
         }
+    }
+    
+    boolean moveToRest(){
+    	boolean rightDone=false;
+    	boolean leftDone=false;
+    	
+    	//Move right to bottom
+    	if(rightSwitch.get()){
+    		rightDone = true;
+    		rightTalon.set(0);
+    		rightTalon.setPosition(0);
+    	} else 
+    		rightTalon.set(-speed);
+    	
+    	//Move left to bottom
+    	if(leftSwitch.get()){
+    		leftDone = true;
+    		leftTalon.set(0);
+    		leftTalon.setPosition(0);
+    	} else 
+    		leftTalon.set(-speed);
+    	
+    	
+    	return rightDone && leftDone;
+    }
+    
+    public void setMode(Mode mode){
+    	this.mode = mode;
+    }
+    public Mode getMode(){
+    	return mode;
     }
 
     //Utils
