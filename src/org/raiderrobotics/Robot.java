@@ -20,13 +20,13 @@ public class Robot extends IterativeRobot {
 	Talon talon1, talon2;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
-	LiftArmSystem armControl;
+	ArmControl armControl;
 	AutoProgram autoProgram;
 	int cameraSession;
 	Image imageFrame;
 
 	public void robotInit() {
-		armControl = new LiftArmSystem();
+		armControl = new ArmControl();
 
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
@@ -82,7 +82,13 @@ public class Robot extends IterativeRobot {
 		NIVision.IMAQdxStartAcquisition(cameraSession);
 	}
 
+	/* This method contains all buttons and joysticks.
+	 * It then calls the appropriate method in the correct class.
+	 * Exceptions: joystick driving and speed boost is in normalDrive()
+	 * 		if the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
+	 */
 	public void teleopPeriodic() {
+		
 		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
@@ -92,12 +98,12 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
 		
 		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
-		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance
+		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance. However
 		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
 		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
 		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
 		
-		//gyro1.doTurn();
+		normalDrive();
 		if (gyro1.isTurning()) gyro1.continueTurning();
 		if (armControl.isMoving()) armControl.continueMoving();
 		
@@ -109,7 +115,7 @@ public class Robot extends IterativeRobot {
 
 	// Drive the robot normally, apply speed boost if needed
 	private void normalDrive() {
-		//Change "L" to "R" if drivers want to use the right xbox joystick for driving
+		//Change "L" to "R" in the following two lines if drivers want to use the right xbox joystick for driving
 		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS); 
 		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS); 
 		double stickMove = stickX * stickX + stickY * stickY;

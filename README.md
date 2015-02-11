@@ -8,6 +8,10 @@
 ### See Readme.MD in Master branch for urgent issues.
 
 
+Assuming using two XBOX controllers. 
+Port 0 = driver
+Port 1 = control arm
+
 =========================
 TODO:
 * test drive train
