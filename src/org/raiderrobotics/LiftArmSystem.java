@@ -121,7 +121,7 @@ public class LiftArmSystem {
      */
     public void tick() {
         //Check for manual drive
-        double move = xbox.getRawAxis(3) - xbox.getRawAxis(2);
+        double move = xbox.getRawAxis(RobotMap.XBOX_R_TRIGER) - xbox.getRawAxis(RobotMap.XBOX_L_TRIGGER);
         if(Math.abs(move) > 0.15){
             mode = Mode.STOP; //Reset the current mode
 
@@ -189,6 +189,13 @@ public class LiftArmSystem {
         else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_R)){
         	mode = Mode.PICK_UP_TO_MIDDLE;
         	if (debug)
+                System.out.println("[Arm Debug] Switched the mode to: Pick up and move to middle");
+        }
+
+        //Pick up and move to top
+        else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_L)){
+        	mode = Mode.PICK_UP_TO_TOP;
+        	if (debug)
                 System.out.println("[Arm Debug] Switched the mode to: Pick up and move to top");
         }
 
@@ -245,12 +252,12 @@ public class LiftArmSystem {
             case PICK_UP_TO_MIDDLE:
             	if(moveToRest()) //If at rest
             		mode = Mode.MOVE_TO_MIDDLE;
-            	break;      	
+            	break;
 
             case PICK_UP_TO_TOP:
             	if(moveToRest()) //If at rest
             		mode = Mode.MOVE_TO_TOP;
-            	break;            	
+            	break;
             	
 /* No need
             //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
@@ -330,9 +337,9 @@ public class LiftArmSystem {
 
         //Move right
         if (!rightDoneMoving) {
-            //If the direction is negative and the arm is lower than the target position - stop
-            //Or if the direction if positive and the arm is higher than the target position - stop
-            if (absR <= 10) {
+        	//Stop when it's closer than 10 encoder distance units
+        	//Also, idiot proof, in case it moves over negative
+            if (absR <= 10 || rightSwitch.get()) {
                 rightDoneMoving = true;
                 rightTalon.set(0);
             } else
@@ -342,7 +349,7 @@ public class LiftArmSystem {
         //Move left
         if (!leftDoneMoving) {
             //Same as above
-            if (absL <= 10) {
+            if (absL <= 10 || leftSwitch.get()) {
                 leftDoneMoving = true;
                 leftTalon.set(0);
             } else
