@@ -61,7 +61,7 @@ public final class RobotMap {
 	final static double ENCODER_DIST_PER_PULSE = 0.1665; //FIXME: this will not work at high speeds. The robot will overshoot.
 	final static double GYRO_SENSITIVITY = 0.007; // "Our gyro is ADRSX622 , with a sensitivity of 7 mV/degree/sec" --Mr.Harwood
 	
-	//autonomous vars
+	//autonomous mode constants
 	//TODO: make the programs into ENUM
 	final static int AUTO_RECYCLE = 0;
 	final static int AUTO_TOTE = 1;
@@ -72,7 +72,11 @@ public final class RobotMap {
 	final static double AUTO_SPEED_FWD = 0.8;
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
 	
+	final static double TALONRAMPINCREMENT = 0.05; 
+	/* NOTE: make a separate constant if you are using the multiply method. 
+	 * This is designed and intended for the addition method.
+	 * Do NOT set this to 1.1 . Make a new constant.
+	 */
 
-	//global variables that are NOT final
 	
 }
