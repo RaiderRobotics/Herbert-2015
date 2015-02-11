@@ -14,8 +14,6 @@ public class AutoProgram {
 		talon1 = talonLeft;
 		talon2 = talonRight;
 		distEncoder = encoderA;
-
-		System.out.println("got to the constructor");
 	}
 
 	void init(){
@@ -28,7 +26,6 @@ public class AutoProgram {
 	}
 
 	void run(){
-		System.out.println("got to the run method");
 		switch(programUsed) {
 		case AUTO_RECYCLE:
 			autoRecycle();
@@ -42,7 +39,6 @@ public class AutoProgram {
 
 
 	void autoRecycle(){
-		System.out.println("got to he autorecycle method");
 		if(! inAutoZone){
 			if(distEncoder.getDistance() < AUTO_ZONE_DISTANCE){
 				rampToSpeed(talon1, AUTO_SPEED_FWD);
@@ -65,7 +61,27 @@ public class AutoProgram {
 		}
 	}
 
-	//TODO: test this
+	//TODO: test this 
+	public void rampToSpeed(Talon talon, double speed){
+		if (speed >= 0.0) {	//ramp up to positive speed
+			if (talon.get() < speed) {
+				//TODO: rewrite using multiplication factor; 
+				//talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a zero.
+				talon.set (talon.get() + TALONRAMPINCREMENT); //add 10% each time (now 5%)
+			} else {
+				talon.set(speed);
+			}
+		} else { //going negative
+			if (speed < talon.get()) {
+				talon.set (talon.get() - TALONRAMPINCREMENT); //subtract 10% each time (now 5%)
+			} else {
+				talon.set(speed);
+			}
+		}
+	}
+	
+/*	
+	//There are some problems with this code. The code above works.
 	public void rampToSpeed(Talon talon, double speed) {
 		if (speed >= 0.0) { //ramp up to positive speed
 			if (talon.get() < speed)
@@ -79,4 +95,5 @@ public class AutoProgram {
 				talon.set(speed);
 		}
 	}
+	*/
 }

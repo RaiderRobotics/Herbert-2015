@@ -55,7 +55,7 @@ public class Robot extends IterativeRobot {
 		encodeDriveL.reset();
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL);
 		autoProgram.setProgram(AUTO_RECYCLE);
-
+		
 		setUpSmartDashboard();
 		setUpCamera();
 
@@ -64,7 +64,7 @@ public class Robot extends IterativeRobot {
 	public void disabledInit() {
         armControl.reset();
 		talon1.stopMotor();
-		talon2.stopMotor();
+		talon2.stopMotor();		
 		NIVision.IMAQdxStopAcquisition(cameraSession);
 	}
 
@@ -82,12 +82,18 @@ public class Robot extends IterativeRobot {
 		NIVision.IMAQdxStartAcquisition(cameraSession);
 	}
 
+	/* This method contains all buttons and joysticks.
+	 * It then calls the appropriate method in the correct class.
+	 * Exceptions: joystick driving and speed boost is in normalDrive()
+	 * 		if the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
+	 */
 	public void teleopPeriodic() {
+		
 		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
 		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
-		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();
+		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
 
@@ -97,6 +103,14 @@ public class Robot extends IterativeRobot {
         armControl.tick();
 
 		//gyro1.doTurn();
+		
+		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
+		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance. However
+		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
+		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
+		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
+		
+		normalDrive();
 		if (gyro1.isTurning()) gyro1.continueTurning();
 
  		//update camera image
@@ -106,11 +120,10 @@ public class Robot extends IterativeRobot {
 	}
 
 	// Drive the robot normally, apply speed boost if needed
-	//TODO: this is not called from anywhere - fix it
 	private void normalDrive() {
-		//Change "L" to "R" if drivers want to use the right xbox joystick for driving
-		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS);
-		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS);
+		//Change "L" to "R" in the following two lines if drivers want to use the right xbox joystick for driving
+		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS); 
+		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS); 
 		double stickMove = stickX * stickX + stickY * stickY;
 
 		if (stickMove > 0.05) gyro1.cancelTurning();
