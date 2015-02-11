@@ -339,7 +339,7 @@ public class LiftArmSystem {
         if (!rightDoneMoving) {
         	//Stop when it's closer than 10 encoder distance units
         	//Also, idiot proof, in case it moves over negative
-            if (absR <= 10 || rightSwitch.get()) {
+            if (absR <= 10 || (sigR < 0 && rightSwitch.get())) {
                 rightDoneMoving = true;
                 rightTalon.set(0);
             } else
@@ -349,7 +349,7 @@ public class LiftArmSystem {
         //Move left
         if (!leftDoneMoving) {
             //Same as above
-            if (absL <= 10 || leftSwitch.get()) {
+            if (absL <= 10 || (sigL < 0 && leftSwitch.get())) {
                 leftDoneMoving = true;
                 leftTalon.set(0);
             } else
