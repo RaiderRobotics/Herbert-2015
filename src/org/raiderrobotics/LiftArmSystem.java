@@ -20,20 +20,38 @@ public class LiftArmSystem {
 
     Joystick xbox;
 
-    int mode = 0;
-    final int BALANCE_MODE = 99;
+    Mode mode = Mode.STOP;
     public boolean debug;
 
     //I'll only use it for debugging
     ConfigurationAPI.ConfigurationSection config = ConfigurationAPI.load("/home/lvuser/config.yml");
+    
+    //Different control modes. To use from within a different class
+    public enum Mode{
+    	STOP(0),
+    	MOVE_TO_REST(1),
+    	MOVE_TO_MIDDLE(2),
+    	MOVE_TO_TOP(3),
+    	PICK_UP_TO_MIDDLE(4),
+    	PICK_UP_TO_TOP(5);
+    	
+    	private int id;
+    	private Mode(int id){
+    		this.id = id;
+    	}
+    	
+    	protected int getId(){
+    		return id;
+    	}
+    }
 
 
     //Dynamic state variables
     //This is why you use Command Base .-.
     private boolean rightDoneMoving;
     private boolean leftDoneMoving;
-    private int balancePosition=0;
-    private boolean balanceRight;
+//    private int balancePosition=0;
+//    private boolean balanceRight;
 
     //constructor -- this should be a singleton pattern so you can't make more than one object
     //Why would you? I can make it static and have static reference to it from within the Robot class - but that's a pain.
@@ -89,7 +107,7 @@ public class LiftArmSystem {
         rightDoneMoving = false;
         leftDoneMoving = false;
         
-        mode = 0;
+        mode = Mode.STOP;
 
         if(debug)
             System.out.println("[Arm Debug] Reset!");
@@ -105,7 +123,7 @@ public class LiftArmSystem {
         //Check for manual drive
         double move = xbox.getRawAxis(3) - xbox.getRawAxis(2);
         if(Math.abs(move) > 0.15){
-            mode = 0; //Reset the current mode
+            mode = Mode.STOP; //Reset the current mode
 
             //Percentage at what the talons will move
             //when one is going faster than the other one
@@ -124,10 +142,14 @@ public class LiftArmSystem {
             if((move < 0 && !rightSwitch.get())
                     || (move > 0 && getRightEncPos() <= config.getDouble("posTop"))) //Check bottom and top limits
                 rightTalon.set(move * right);
+            else
+            	rightTalon.set(0);
 
             if((move < 0 && !leftSwitch.get())
                     || (move > 0 && getLeftEncPos() <= config.getDouble("posTop"))) //Check bottom and stop limits
                 leftTalon.set(move * left);
+            else
+            	leftTalon.set(0);
 
             return;
         }
@@ -137,30 +159,30 @@ public class LiftArmSystem {
 
         //Emergency stop button
         if (xbox.getRawButton(RobotMap.XBOX_BTN_X)) {
-            mode = 0;
+            mode = Mode.STOP;
             if (debug)
-                System.out.println("[Arm Debug] Pressed button " + RobotMap.XBOX_BTN_X);
+                System.out.println("[Arm Debug] Switched the mode to: Emergency stop");
         }
 
         //Move to rest button
         else if (xbox.getRawButton(RobotMap.XBOX_BTN_A)) {
-            mode = RobotMap.XBOX_BTN_A;
+            mode = Mode.MOVE_TO_REST;
             if (debug)
-                System.out.println("[Arm Debug] Pressed button " + RobotMap.XBOX_BTN_A);
+                System.out.println("[Arm Debug] Switched the mode to: Move to rest");
         }
 
         //Move to middle button
         else if (xbox.getRawButton(RobotMap.XBOX_BTN_B)) {
-            mode = RobotMap.XBOX_BTN_B;
+            mode = Mode.MOVE_TO_MIDDLE;
             if (debug)
-                System.out.println("[Arm Debug] Pressed button " + RobotMap.XBOX_BTN_B);
+                System.out.println("[Arm Debug] Switched the mode to: Move to middle");
         }
 
         //Move to top button
         else if (xbox.getRawButton(RobotMap.XBOX_BTN_Y)) {
-            mode = RobotMap.XBOX_BTN_Y;
+            mode = Mode.MOVE_TO_TOP;
             if (debug)
-                System.out.println("[Arm Debug] Pressed button " + RobotMap.XBOX_BTN_Y);
+                System.out.println("[Arm Debug] Switched the mode to: Move to top");
         }
 
 
@@ -168,7 +190,7 @@ public class LiftArmSystem {
         //This is why you use Command Base .-.
         switch (mode) {
             //Move to rest button
-            case RobotMap.XBOX_BTN_A:
+            case MOVE_TO_REST:
                 //Check if done
                 if (rightSwitch.get() && leftSwitch.get()) {
                     //Reset
@@ -178,7 +200,7 @@ public class LiftArmSystem {
                     rightTalon.setPosition(0);
                     leftTalon.setPosition(0);
 
-                    mode = 0;
+                    mode = Mode.STOP;
                 }
                 //Not done? Move
                 else {
@@ -189,7 +211,7 @@ public class LiftArmSystem {
                 break;
 
             //Move to middle button
-            case RobotMap.XBOX_BTN_B:
+            case MOVE_TO_MIDDLE:
                 //Check if done
                 if (rightDoneMoving && leftDoneMoving) {
                     //Reset
@@ -199,7 +221,7 @@ public class LiftArmSystem {
                     rightDoneMoving = false;
                     leftDoneMoving = false;
 
-                    mode = BALANCE_MODE;
+                    mode = Mode.STOP;
                 }
                 //Not done? Move
                 else {
@@ -208,7 +230,7 @@ public class LiftArmSystem {
                 break;
 
             //Move to top button
-            case RobotMap.XBOX_BTN_Y:
+            case MOVE_TO_TOP:
                 //Check if done
                 if (rightDoneMoving && leftDoneMoving) {
                     //Reset
@@ -218,14 +240,14 @@ public class LiftArmSystem {
                     rightDoneMoving = false;
                     leftDoneMoving = false;
 
-                    mode = BALANCE_MODE;
+                    mode = Mode.STOP;
                 }
                 //Not done? Move
                 else {
                     moveTo(config.getDouble("posTop"));
                 }
                 break;
-
+/* No need
             //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
             case BALANCE_MODE:
                 if(balancePosition == 0){
@@ -243,14 +265,14 @@ public class LiftArmSystem {
 
                 if(balanceRight){ //If moving the right talon
                     if(getRightEncPos() > balancePosition){ //If not in place yet
-                        rightTalon.set(-0.5);
+                        rightTalon.set(-0.25);
                         break;
                     } else
                         rightTalon.set(0);
 
                 } else { //No? Then we might probably be moving the left talon
                     if(getLeftEncPos() > balancePosition){ //If not in place yet
-                        leftTalon.set(-0.5);
+                        leftTalon.set(-0.25);
                         break;
                     } else
                         leftTalon.set(0);
@@ -259,13 +281,14 @@ public class LiftArmSystem {
                 mode = 0;
 
                 break;
+*/
 
             //Emergency stop button
             default:
                 //Reset stuff
                 rightDoneMoving = false;
                 leftDoneMoving = false;
-                balancePosition = 0;
+//                balancePosition = 0;
 
                 rightTalon.set(0);
                 leftTalon.set(0);
