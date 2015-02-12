@@ -104,13 +104,7 @@ public class Robot extends IterativeRobot {
 
 		//gyro1.doTurn();
 		
-		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
-		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance. However
-		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
-		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
-		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
-		
-		normalDrive();
+        normalDrive();
 		if (gyro1.isTurning()) gyro1.continueTurning();
 
  		//update camera image
