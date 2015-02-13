@@ -18,7 +18,7 @@ public class Robot extends IterativeRobot {
 	Joystick xbox360drive, xbox360arm;
 	RobotDrive driveTrain1;
 	Talon talon1, talon2;
-	CANTalon talonPulley;
+	CANTalon talonPulley, talonTwister;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
 	LiftArmSystem armControl;
@@ -31,6 +31,7 @@ public class Robot extends IterativeRobot {
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
+		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
 		//this is supposed to shut off the motors when joystick is at zero to save power.  Does it work only on Jaguars?
 		talon1.enableDeadbandElimination(true);
 		talon2.enableDeadbandElimination(true);
@@ -46,7 +47,7 @@ public class Robot extends IterativeRobot {
 
 		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
 		
-		//limitSwitch = new DigitalInput(LIMIT_SWITCH_PORT);
+		limitSwitch = new DigitalInput(LIMIT_SWITCH_PORT);
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
@@ -114,9 +115,11 @@ public class Robot extends IterativeRobot {
 		//if(!limitSwitch.get()){
 			talonPulley.set(xbox360arm.getY()*-0.3);
 		//}else{
-		//	talonPulley.set(0.1);
+			//talonPulley.set(0.1);
 		//}
-			
+		//twister system
+		talonTwister.set(xbox360arm.getRawAxis(4)*0.8);
+		
  		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
 		//NIVision.imaqDrawShapeOnImage(imageFrame, imageFrame, new NIVision.Rect(10, 10, 100, 100) , DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);

@@ -54,6 +54,7 @@ public final class RobotMap {
 	final static int TALON_2_PORT = 2;
 	final static int TALON3_CAN_ID = 3;
 	final static int TALON4_CAN_ID = 4;	
+	final static int TALON_TWISTER_CAN_ID = 5;
 	final static int TALON_PULLEY_CAN_ID = 6; 
 	//talons 3 and 4 are only in the LiftArmSystem
 	
