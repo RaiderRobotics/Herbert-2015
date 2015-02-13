@@ -112,11 +112,11 @@ public class Robot extends IterativeRobot {
 		if (gyro1.isTurning()) gyro1.continueTurning();
 		
 		//pulley system
-		//if(!limitSwitch.get()){
+		if(!limitSwitch.get()){
 			talonPulley.set(xbox360arm.getY()*-0.3);
-		//}else{
-			//talonPulley.set(0.1);
-		//}
+		}else{
+			talonPulley.set(0.1);
+		}
 		//twister system
 		talonTwister.set(xbox360arm.getRawAxis(4)*0.8);
 		
