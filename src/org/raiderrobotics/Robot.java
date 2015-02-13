@@ -115,7 +115,7 @@ public class Robot extends IterativeRobot {
 		if(!limitSwitch.get()){
 			talonPulley.set(xbox360arm.getY()*-0.3);
 		}else{
-			talonPulley.set(0.1);
+			talonPulley.set(-0.2);
 		}
 		//twister system
 		talonTwister.set(xbox360arm.getRawAxis(4)*0.8);
