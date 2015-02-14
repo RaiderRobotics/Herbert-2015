@@ -15,7 +15,7 @@ public final class RobotMap {
 	/* FINAL constants */
 	//final static int ARCADE = 1;
 	//final static int TANK = 2;
-	final static int NORMSPEED = 70;	//% speed of normal driving
+	final static int NORMSPEED = 80;	//% speed of normal driving
 	final static int MAXSPEED = 100;	
 	
 	/* joysticks and buttons */
