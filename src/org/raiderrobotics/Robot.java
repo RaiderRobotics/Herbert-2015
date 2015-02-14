@@ -50,7 +50,7 @@ public class Robot extends IterativeRobot {
         armControl = new ArmControl(xbox360arm);
 		armControl.debug = true;
 		
-		binArmSystem = new BinArmSystem(xbox360arm);
+		binArmSystem = new BinArmSystem(xbox360arm,armControl);
 		
         encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
@@ -171,6 +171,8 @@ public class Robot extends IterativeRobot {
 		// the camera name (ex "cam0") can be found through the roborio web interface
 		cameraSession = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
 		NIVision.IMAQdxConfigureGrab(cameraSession);
+	
+	
 	}
 
 }
