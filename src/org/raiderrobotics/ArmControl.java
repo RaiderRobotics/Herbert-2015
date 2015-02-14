@@ -196,11 +196,15 @@ public class ArmControl {
 
 		//Move to middle button
 		else if (xbox.getRawButton(RobotMap.XBOX_BTN_B)) {
+			rightDoneMoving = false;
+			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_MIDDLE;
 		}
 
 		//Move to top button
 		else if (xbox.getRawButton(RobotMap.XBOX_BTN_Y)) {
+			rightDoneMoving = false;
+			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_TOP;
 		}
 
@@ -269,7 +273,8 @@ public class ArmControl {
 				armMode = Mode.MOVE_TO_TOP;
 			break;
 
-			//Emergency stop button? What would ever get to this case?
+			//Emergency stop button?
+		case STOP:
 		default:
 			//Reset stuff
 			rightDoneMoving = false;
