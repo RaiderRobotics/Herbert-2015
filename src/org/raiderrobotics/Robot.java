@@ -21,16 +21,14 @@ public class Robot extends IterativeRobot {
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
 	ArmControl armControl;
+	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
 	int cameraSession;
 	Image imageFrame;
-
+	
 	public void robotInit() {
-		armControl = new ArmControl();
-
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
-
 		//this is supposed to shut off the motors when joystick is at zero to save power.  Does it work only on Jaguars?
 		talon1.enableDeadbandElimination(true);
 		talon2.enableDeadbandElimination(true);
@@ -45,11 +43,16 @@ public class Robot extends IterativeRobot {
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kRearRight,true);
 
 		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
-
+		
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
+        armControl = new ArmControl(xbox360arm);
+		armControl.debug = true;
+		
+		binArmSystem = new BinArmSystem(xbox360arm);
+		
+        encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL);
@@ -61,7 +64,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void disabledInit() {
-		armControl.stop();
+        armControl.reset();
 		talon1.stopMotor();
 		talon2.stopMotor();		
 		NIVision.IMAQdxStopAcquisition(cameraSession);
@@ -70,7 +73,6 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		//this will set the Gyro so that zero is the direction that it is pointing when Autonomous begins.
 		gyro1.reset();
-		armControl.moveToZero();
 		autoProgram.init();
 	}
 
@@ -85,7 +87,7 @@ public class Robot extends IterativeRobot {
 	/* This method contains all buttons and joysticks.
 	 * It then calls the appropriate method in the correct class.
 	 * Exceptions: joystick driving and speed boost is in normalDrive()
-	 * 		if the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
+	 * 	If the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
 	 */
 	public void teleopPeriodic() {
 		
@@ -96,16 +98,14 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
-		
-		if (xbox360arm.getRawButton(XBOX_BTN_A)) armControl.moveToZero();
-		//Max's idea: add a button to moveToZero (drop tote), backup 1 tote distance. However
-		if (xbox360arm.getRawButton(XBOX_BTN_B)) armControl.moveToOne();		
-		if (xbox360arm.getRawButton(XBOX_BTN_Y)) armControl.moveToTop();
-		if (xbox360arm.getRawButton(XBOX_BTN_X)) armControl.stop();
-		
-		normalDrive();
-		if (gyro1.isTurning()) gyro1.continueTurning();
-		if (armControl.isMoving()) armControl.continueMoving();
+        
+        normalDrive();
+
+        armControl.tick();
+        
+        binArmSystem.tick();
+
+        if (gyro1.isTurning()) gyro1.continueTurning();
 		
  		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
@@ -134,7 +134,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void testInit() {
-		System.out.println("Default IterativeRobot.testInit() method... Overload me!");
+		//System.out.println("Default IterativeRobot.testInit() method... Overload me!");
 	}
 
 	/* This function is called periodically during test mode */
@@ -160,7 +160,7 @@ public class Robot extends IterativeRobot {
 		//Sendable chooser should create a list of selectable objects(they do nothing)
 		SendableChooser chooser1 = new SendableChooser();
 
-		chooser1.addDefault("Deafault", "x");
+		chooser1.addDefault("Default", "x");
 		chooser1.addObject("Option 1", "y");
 		chooser1.addObject("Option 2", "z");
 		SmartDashboard.putData("Chooser", chooser1);

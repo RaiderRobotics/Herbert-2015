@@ -52,10 +52,15 @@ public final class RobotMap {
 	//motor controller ports
 	final static int TALON_1_PORT = 1;
 	final static int TALON_2_PORT = 2;
+	final static int TALON3_CAN_ID = 3;
+	final static int TALON4_CAN_ID = 4;	
+	final static int TALON_TWISTER_CAN_ID = 5;
+	final static int TALON_PULLEY_CAN_ID = 6; 
 	//talons 3 and 4 are only in the LiftArmSystem
 	
 	//sensor ports
 	final static int GYRO1_PORT = 0;
+	final static int LIMIT_SWITCH_PORT = 6;
 	
 	//sensor config values
 	final static double ENCODER_DIST_PER_PULSE = 0.1665; //FIXME: this will not work at high speeds. The robot will overshoot.
