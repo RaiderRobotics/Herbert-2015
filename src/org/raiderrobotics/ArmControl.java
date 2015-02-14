@@ -210,11 +210,15 @@ public class ArmControl {
 
 		//Pick up and move to middle
 		else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_R)){
+			rightDoneMoving = false;
+			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_MIDDLE;
 		}
 
 		//Pick up and move to top
 		else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_L)){
+			rightDoneMoving = false;
+			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_TOP;
 		}
 
