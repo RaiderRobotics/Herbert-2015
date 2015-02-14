@@ -21,7 +21,7 @@ public class Robot extends IterativeRobot {
 	CANTalon talonPulley, talonTwister;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
-	LiftArmSystem armControl;
+	ArmControl armControl;
 	AutoProgram autoProgram;
     DigitalInput limitSwitch; //Which limit switch is this?
 	int cameraSession;
@@ -51,7 +51,7 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-        armControl = new LiftArmSystem(xbox360arm);
+        armControl = new ArmControl(xbox360arm);
 		armControl.debug = true;
 		
         encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)

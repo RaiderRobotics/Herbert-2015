@@ -31,7 +31,7 @@ import org.raiderrobotics.utils.ConfigurationAPI;
  *
  * Temporarily added SmartDashboard printouts so that we can remove the config.get ...
  */
-public class LiftArmSystem {
+public class ArmControl {
 
 	//Talon variables
 	CANTalon leftTalon;
@@ -44,10 +44,10 @@ public class LiftArmSystem {
 	DigitalInput leftSwitch;
 
 	//fill these in from the config file values once we figure out what they are.
-	static final double POS_TOP = 0.0;
-	static final double POS_MIDDLE = 0.0;
-	static final double SPEED = 0.0;
-	static final double SLOWDOWN = 0.0;
+	static final double POS_TOP = 6500.0;
+	static final double POS_MIDDLE = 4000.0;
+	static final double ARMSPEED = 0.8;
+	static final double SLOWDOWN = 500.0;
 
 	double speed = 0.5; //autonomous move speed
 
@@ -57,7 +57,7 @@ public class LiftArmSystem {
 	public boolean debug;
 
 	//I'll only use it for debugging
-	ConfigurationAPI.ConfigurationSection config = ConfigurationAPI.load("/home/lvuser/config.yml");
+	//ConfigurationAPI.ConfigurationSection config = ConfigurationAPI.load("/home/lvuser/config.yml");
 
 	//Different control modes. To use from within a different class
 	public enum Mode{
@@ -88,7 +88,7 @@ public class LiftArmSystem {
 	 *
 	 * @param xbox The arm controller reference
 	 */
-	LiftArmSystem(Joystick xbox) {
+	ArmControl(Joystick xbox) {
 		this.xbox = xbox;
 
 		//configure both talons
@@ -113,10 +113,10 @@ public class LiftArmSystem {
 		reset();
 
 		//Get values of constants used:
-		SmartDashboard.putString("Config.speed", "" + config.getDouble("speed"));
-		SmartDashboard.putString("Config.posMiddle", "" + config.getDouble("posMiddle"));
-		SmartDashboard.putString("Config.posTop", "" + config.getDouble("posTop"));
-		SmartDashboard.putString("Config.slowDown", "" + config.getDouble("slowDown"));
+		//SmartDashboard.putString("Config.speed", "" + config.getDouble("speed"));
+		//SmartDashboard.putString("Config.posMiddle", "" + config.getDouble("posMiddle"));
+		//SmartDashboard.putString("Config.posTop", "" + config.getDouble("posTop"));
+		//SmartDashboard.putString("Config.slowDown", "" + config.getDouble("slowDown"));
 
 	}
 
@@ -125,14 +125,15 @@ public class LiftArmSystem {
 	 * Must be called once on disable or initialisation of the robot.
 	 */
 	public void reset() {
-		config.reload();
+		//config.reload();
 
 		leftTalon.setPosition(0);
 		rightTalon.setPosition(0);
 
-		speed = config.getDouble("speed");
+		speed = ARMSPEED;
 		//fix: NEVER compare a double to any other number using ==
-		if (speed == 0.0)
+		//if (speed == 0.0)
+		if (Math.abs(speed) < 0.08)		//which number should we use?
 			speed = 0.5;
 
 		rightDoneMoving = false;
@@ -167,13 +168,13 @@ public class LiftArmSystem {
 
 			//Move the talons based on their determined speeds
 			if((move < 0 && !rightSwitch.get())
-					|| (move > 0.0 && getRightEncPos() <= config.getDouble("posTop"))) //Check bottom and top limits
+					|| (move > 0.0 && getRightEncPos() <= POS_TOP)) //Check bottom and top limits
 				rightTalon.set(move * right);
 			else
 				rightTalon.set(0.0);
 
 			if((move < 0 && !leftSwitch.get())
-					|| (move > 0.0 && getLeftEncPos() <= config.getDouble("posTop"))) //Check bottom and stop limits
+					|| (move > 0.0 && getLeftEncPos() <= POS_TOP)) //Check bottom and stop limits
 				leftTalon.set(move * left);
 			else
 				leftTalon.set(0.0);
@@ -234,7 +235,7 @@ public class LiftArmSystem {
 			}
 			//Not done? continue to move to middle
 			else {
-				moveTo(config.getDouble("posMiddle"));
+				moveTo(POS_MIDDLE);
 			}
 			break;
 
@@ -252,7 +253,7 @@ public class LiftArmSystem {
 			}
 			//Not done? continue to move to top
 			else {
-				moveTo(config.getDouble("posTop"));
+				moveTo(POS_TOP);
 			}
 			break;
 
@@ -289,7 +290,7 @@ public class LiftArmSystem {
 		double absR = Math.abs(distR);
 		double absL = Math.abs(distL);
 
-		double slowDown = config.getDouble("slowDown");
+		double slowDown = SLOWDOWN;
 
 		//If getting close - slow down
 		//I.E.: If position is less than the maximum speed * (100 for example)
