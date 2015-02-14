@@ -18,20 +18,17 @@ public class Robot extends IterativeRobot {
 	Joystick xbox360drive, xbox360arm;
 	RobotDrive driveTrain1;
 	Talon talon1, talon2;
-	CANTalon talonPulley, talonTwister;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
 	ArmControl armControl;
+	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
-    DigitalInput limitSwitch; //Which limit switch is this?
 	int cameraSession;
 	Image imageFrame;
 	
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
-		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
-		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
 		//this is supposed to shut off the motors when joystick is at zero to save power.  Does it work only on Jaguars?
 		talon1.enableDeadbandElimination(true);
 		talon2.enableDeadbandElimination(true);
@@ -47,12 +44,13 @@ public class Robot extends IterativeRobot {
 
 		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
 		
-		limitSwitch = new DigitalInput(LIMIT_SWITCH_PORT);
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
         armControl = new ArmControl(xbox360arm);
 		armControl.debug = true;
+		
+		binArmSystem = new BinArmSystem(xbox360arm);
 		
         encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
@@ -104,19 +102,10 @@ public class Robot extends IterativeRobot {
         normalDrive();
 
         armControl.tick();
+        
+        binArmSystem.tick();
 
         if (gyro1.isTurning()) gyro1.continueTurning();
-		
-		//pulley system. !limitSwitch.get() -- this means that the switch is still open.
-		if(!limitSwitch.get()){	
-			talonPulley.set(xbox360arm.getY()*-0.3);
-		}else{ // bin motor has hit switch at top
-			talonPulley.set(-0.2);
-			armControl.stop();
-			//TODO: set 3 short rumbles!!!  Also when it hits the bottom.
-		}
-		//twister system
-		talonTwister.set(xbox360arm.getRawAxis(4)*0.8);
 		
  		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
