@@ -23,7 +23,7 @@ public class Robot extends IterativeRobot {
 	Encoder encodeDriveL, encodeDriveR;
 	LiftArmSystem armControl;
 	AutoProgram autoProgram;
-    DigitalInput limitSwitch;
+    DigitalInput limitSwitch; //Which limit switch is this?
 	int cameraSession;
 	Image imageFrame;
 	
@@ -89,7 +89,7 @@ public class Robot extends IterativeRobot {
 	/* This method contains all buttons and joysticks.
 	 * It then calls the appropriate method in the correct class.
 	 * Exceptions: joystick driving and speed boost is in normalDrive()
-	 * 		if the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
+	 * 	If the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
 	 */
 	public void teleopPeriodic() {
 		
@@ -100,22 +100,20 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
+        
+        normalDrive();
 
-        //There's no need to have everything controlled in the main class.
-        // There's a reason why we have a separate class for arm control.
-        // Even the joystick's name suggests that it has nothing to do but the arm control alone.
         armControl.tick();
 
-		//gyro1.doTurn();
+        if (gyro1.isTurning()) gyro1.continueTurning();
 		
-        normalDrive();
-		if (gyro1.isTurning()) gyro1.continueTurning();
-		
-		//pulley system
-		if(!limitSwitch.get()){
+		//pulley system. !limitSwitch.get() -- this means that the switch is still open.
+		if(!limitSwitch.get()){	
 			talonPulley.set(xbox360arm.getY()*-0.3);
-		}else{
+		}else{ // bin motor has hit switch at top
 			talonPulley.set(-0.2);
+			armControl.stop();
+			//TODO: set 3 short rumbles!!!  Also when it hits the bottom.
 		}
 		//twister system
 		talonTwister.set(xbox360arm.getRawAxis(4)*0.8);
@@ -147,8 +145,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void testInit() {
-		//Why? .-.
-		System.out.println("Default IterativeRobot.testInit() method... Overload me!");
+		//System.out.println("Default IterativeRobot.testInit() method... Overload me!");
 	}
 
 	/* This function is called periodically during test mode */

@@ -2,400 +2,379 @@ package org.raiderrobotics;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
+
 import org.raiderrobotics.utils.ConfigurationAPI;
 
+/* ****** REFACTORING ********
+ * Date: 9pm, Feb 13th, 2015.
+ * Done by: M. Harwood to make it easier to read and fix bugs
+ * editorial comments and extraneous comment blocks removed
+ * enum Mode: removed id numbers
+ * 
+ * variable names refactored: mode -> armMode
+ * 			disR -> distR
+ * 			disL -> distL 
+ * 			some others still need fixing
+ * 
+ * The signum code is too complex to attempt modifying. 
+ * The logic of it needs explaining and it needs to be rewritten.
+ * 
+ * The freezing of one arm may be due to 
+ * (i) a divide by zero error (for example, if slowDown = 0.0) which results in NaN or infinity.
+ * (ii) the line checking to see if speed == 0.0 (rounding errors will make this rarely equal
+ * (iii) some other logic problem
+ *  
+ * Other to do: standardize which is done first, left or right so that all code is consistent.
+ *
+ * Temporarily added SmartDashboard printouts so that we can remove the config.get ...
+ */
 public class LiftArmSystem {
 
-    //Talon variables
-    CANTalon leftTalon;
-    CANTalon rightTalon;
+	//Talon variables
+	CANTalon leftTalon;
+	CANTalon rightTalon;
 
-    //Hall effect sensors
-    DigitalInput rightSwitch;
-    DigitalInput leftSwitch;
+	//Sensor switches
+	//for this switch, false = open = no signal from arm; true = closed. (If the sensor is replaced this may be reversed.)
+	//thus: leftSwitch.get() is TRUE if it is closed
+	DigitalInput rightSwitch;
+	DigitalInput leftSwitch;
 
-    double speed = 0.5; //autonomous move speed
+	//fill these in from the config file values once we figure out what they are.
+	static final double POS_TOP = 0.0;
+	static final double POS_MIDDLE = 0.0;
+	static final double SPEED = 0.0;
+	static final double SLOWDOWN = 0.0;
 
-    Joystick xbox;
+	double speed = 0.5; //autonomous move speed
 
-    Mode mode = Mode.STOP;
-    public boolean debug;
+	Joystick xbox;
 
-    //I'll only use it for debugging
-    ConfigurationAPI.ConfigurationSection config = ConfigurationAPI.load("/home/lvuser/config.yml");
-    
-    //Different control modes. To use from within a different class
-    public enum Mode{
-    	STOP(0),
-    	MOVE_TO_REST(1),
-    	MOVE_TO_MIDDLE(2),
-    	MOVE_TO_TOP(3),
-    	PICK_UP_TO_MIDDLE(4),
-    	PICK_UP_TO_TOP(5);
-    	
-    	private int id;
-    	private Mode(int id){
-    		this.id = id;
-    	}
-    	
-    	protected int getId(){
-    		return id;
-    	}
-    }
+	Mode armMode = Mode.STOP;
+	public boolean debug;
 
+	//I'll only use it for debugging
+	ConfigurationAPI.ConfigurationSection config = ConfigurationAPI.load("/home/lvuser/config.yml");
 
-    //Dynamic state variables
-    //This is why you use Command Base .-.
-    private boolean rightDoneMoving;
-    private boolean leftDoneMoving;
-//    private int balancePosition=0;
-//    private boolean balanceRight;
-
-    //constructor -- this should be a singleton pattern so you can't make more than one object
-    //Why would you? I can make it static and have static reference to it from within the Robot class - but that's a pain.
-    //Unless one messes with it and creates a bunch of objects, it's fine as it is.
-
-    /**
-     * Create the arm lift control system.
-     * Responsible for lifting and lowering the arm.
-     * The only two methods that are required to be called from the main class: {@link #tick()} and {@link #reset()}.
-     *
-     * @param xbox The arm controller reference
-     */
-    LiftArmSystem(Joystick xbox) {
-        this.xbox = xbox;
-
-        //configure both talons
-        this.leftTalon = new CANTalon(RobotMap.TALON3_CAN_ID);
-        this.rightTalon = new CANTalon(RobotMap.TALON4_CAN_ID);
-        
-        leftSwitch = new DigitalInput(4);
-        rightSwitch = new DigitalInput(5);
-
-        leftTalon.set(0);
-        leftTalon.changeControlMode(ControlMode.PercentVbus);
-        leftTalon.enableControl();
-        //TODO: test this
-        //leftTalon.setVoltageRampRate(RAMPRATE);
-
-        rightTalon.set(0);
-        rightTalon.changeControlMode(ControlMode.PercentVbus);
-        rightTalon.enableControl();
-        //TODO: test this
-        //rightTalon.setVoltageRampRate(RAMPRATE);
-
-        reset();
-    }
-
-    /**
-     * Used to reset any variables of the running class.
-     * Must be called once on disable or initialisation of the robot.
-     */
-    public void reset() {
-        config.reload();
-
-        leftTalon.setPosition(0);
-        rightTalon.setPosition(0);
-
-        speed = config.getDouble("speed");
-        if (speed == 0)
-            speed = 0.5;
-
-        //This is why you use Command Base .-.
-        rightDoneMoving = false;
-        leftDoneMoving = false;
-        
-        mode = Mode.STOP;
-
-        if(debug)
-            System.out.println("[Arm Debug] Reset!");
-    }
-
-    /**
-     * The most important method of the class.
-     * It runs the whole logic of the class.
-     * It the method is not executed - no output will be produced form the arm control system.
-     * Must be called periodically (usually in teleopPeriodic()).
-     */
-    public void tick() {
-        //Check for manual drive
-        double move = xbox.getRawAxis(RobotMap.XBOX_R_TRIGER) - xbox.getRawAxis(RobotMap.XBOX_L_TRIGGER);
-        if(Math.abs(move) > 0.15){
-            mode = Mode.STOP; //Reset the current mode
-
-            //Percentage at what the talons will move
-            //when one is going faster than the other one
-            double rightCut = 0.95;
-            double leftCut = 0.95;
-
-            //Determining if one talon is moving faster than the other one
-            double right = Math.abs(getRightEncPos()) > Math.abs(getLeftEncPos())
-                    ? rightCut
-                    : 1;
-            double left = Math.abs(getLeftEncPos()) > Math.abs(getRightEncPos())
-                    ? leftCut
-                    : 1;
-
-            //Move the talons based on their determined speeds
-            if((move < 0 && !rightSwitch.get())
-                    || (move > 0 && getRightEncPos() <= config.getDouble("posTop"))) //Check bottom and top limits
-                rightTalon.set(move * right);
-            else
-            	rightTalon.set(0);
-
-            if((move < 0 && !leftSwitch.get())
-                    || (move > 0 && getLeftEncPos() <= config.getDouble("posTop"))) //Check bottom and stop limits
-                leftTalon.set(move * left);
-            else
-            	leftTalon.set(0);
-
-            return;
-        }
-
-        //Check the mode
-        //This is why you use Command Base .-.
-
-        //Emergency stop button
-        if (xbox.getRawButton(RobotMap.XBOX_BTN_X)) {
-            mode = Mode.STOP;
-            if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Emergency stop");
-        }
-
-        //Move to rest button
-        else if (xbox.getRawButton(RobotMap.XBOX_BTN_A)) {
-            mode = Mode.MOVE_TO_REST;
-            if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Move to rest");
-        }
-
-        //Move to middle button
-        else if (xbox.getRawButton(RobotMap.XBOX_BTN_B)) {
-            mode = Mode.MOVE_TO_MIDDLE;
-            if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Move to middle");
-        }
-
-        //Move to top button
-        else if (xbox.getRawButton(RobotMap.XBOX_BTN_Y)) {
-            mode = Mode.MOVE_TO_TOP;
-            if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Move to top");
-        }
-        
-        //Pick up and move to middle
-        else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_R)){
-        	mode = Mode.PICK_UP_TO_MIDDLE;
-        	if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Pick up and move to middle");
-        }
-
-        //Pick up and move to top
-        else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_L)){
-        	mode = Mode.PICK_UP_TO_TOP;
-        	if (debug)
-                System.out.println("[Arm Debug] Switched the mode to: Pick up and move to top");
-        }
+	//Different control modes. To use from within a different class
+	public enum Mode{
+		STOP,
+		MOVE_TO_REST,
+		MOVE_TO_MIDDLE,
+		MOVE_TO_TOP,
+		PICK_UP_TO_MIDDLE,
+		PICK_UP_TO_TOP;
+	}
 
 
-        //Check the buttons
-        //This is why you use Command Base .-.
-        switch (mode) {
-            //Move to rest button
-            case MOVE_TO_REST:
-                //Check if done
-            	if(moveToRest())
-            		mode = Mode.STOP;            	
+	//Dynamic state variables
+	//This is why you use Command Base .-.
+	private boolean rightDoneMoving;
+	private boolean leftDoneMoving;
+	//    private int balancePosition=0;
+	//    private boolean balanceRight;
 
-                break;
+	//constructor -- this should be a singleton pattern so you can't make more than one object
+	//Why would you? I can make it static and have static reference to it from within the Robot class - but that's a pain.
+	//Unless one messes with it and creates a bunch of objects, it's fine as it is.
 
-            //Move to middle button
-            case MOVE_TO_MIDDLE:
-                //Check if done
-                if (rightDoneMoving && leftDoneMoving) {
-                    //Reset
-                    rightTalon.set(0);
-                    leftTalon.set(0);
+	/**
+	 * Create the arm lift control system.
+	 * Responsible for lifting and lowering the arm.
+	 * The only two methods that are required to be called from the main class: {@link #tick()} and {@link #reset()}.
+	 *
+	 * @param xbox The arm controller reference
+	 */
+	LiftArmSystem(Joystick xbox) {
+		this.xbox = xbox;
 
-                    rightDoneMoving = false;
-                    leftDoneMoving = false;
+		//configure both talons
+		this.leftTalon = new CANTalon(RobotMap.TALON3_CAN_ID);
+		this.rightTalon = new CANTalon(RobotMap.TALON4_CAN_ID);
 
-                    mode = Mode.STOP;
-                }
-                //Not done? Move
-                else {
-                    moveTo(config.getDouble("posMiddle"));
-                }
-                break;
+		leftSwitch = new DigitalInput(4);
+		rightSwitch = new DigitalInput(5);
 
-            //Move to top button
-            case MOVE_TO_TOP:
-                //Check if done
-                if (rightDoneMoving && leftDoneMoving) {
-                    //Reset
-                    rightTalon.set(0);
-                    leftTalon.set(0);
+		leftTalon.set(0.0);
+		leftTalon.changeControlMode(ControlMode.PercentVbus);
+		leftTalon.enableControl();
+		//TODO: test this
+		//leftTalon.setVoltageRampRate(RAMPRATE);
 
-                    rightDoneMoving = false;
-                    leftDoneMoving = false;
+		rightTalon.set(0.0);
+		rightTalon.changeControlMode(ControlMode.PercentVbus);
+		rightTalon.enableControl();
+		//TODO: test this
+		//rightTalon.setVoltageRampRate(RAMPRATE);
 
-                    mode = Mode.STOP;
-                }
-                //Not done? Move
-                else {
-                    moveTo(config.getDouble("posTop"));
-                }
-                break;
-                
-            case PICK_UP_TO_MIDDLE:
-            	if(moveToRest()) //If at rest
-            		mode = Mode.MOVE_TO_MIDDLE;
-            	break;
+		reset();
 
-            case PICK_UP_TO_TOP:
-            	if(moveToRest()) //If at rest
-            		mode = Mode.MOVE_TO_TOP;
-            	break;
-            	
-/* No need
-            //Balance mode (run after MOVE_TO_MIDDLE and MOVE_TO_TOP)
-            case BALANCE_MODE:
-                if(balancePosition == 0){
-                    if(getRightEncPos() > getLeftEncPos()){
-                        balancePosition = getRightEncPos();
-                        balanceRight = true;
-                    } else if(getLeftEncPos() > getRightEncPos()){
-                        balancePosition = getLeftEncPos();
-                        balanceRight = false;
-                    }
+		//Get values of constants used:
+		SmartDashboard.putString("Config.speed", "" + config.getDouble("speed"));
+		SmartDashboard.putString("Config.posMiddle", "" + config.getDouble("posMiddle"));
+		SmartDashboard.putString("Config.posTop", "" + config.getDouble("posTop"));
+		SmartDashboard.putString("Config.slowDown", "" + config.getDouble("slowDown"));
 
-                    if(debug)
-                        System.out.println("Balance position: "+balancePosition+" ; Right: "+balanceRight);
-                }
+	}
 
-                if(balanceRight){ //If moving the right talon
-                    if(getRightEncPos() > balancePosition){ //If not in place yet
-                        rightTalon.set(-0.25);
-                        break;
-                    } else
-                        rightTalon.set(0);
+	/**
+	 * Used to reset any variables of the running class.
+	 * Must be called once on disable or initialisation of the robot.
+	 */
+	public void reset() {
+		config.reload();
 
-                } else { //No? Then we might probably be moving the left talon
-                    if(getLeftEncPos() > balancePosition){ //If not in place yet
-                        leftTalon.set(-0.25);
-                        break;
-                    } else
-                        leftTalon.set(0);
-                }
+		leftTalon.setPosition(0);
+		rightTalon.setPosition(0);
 
-                mode = 0;
+		speed = config.getDouble("speed");
+		//fix: NEVER compare a double to any other number using ==
+		if (speed == 0.0)
+			speed = 0.5;
 
-                break;
-*/
+		rightDoneMoving = false;
+		leftDoneMoving = false;
 
-            //Emergency stop button
-            default:
-                //Reset stuff
-                rightDoneMoving = false;
-                leftDoneMoving = false;
-//                balancePosition = 0;
+		armMode = Mode.STOP;
 
-                rightTalon.set(0);
-                leftTalon.set(0);
-        }
-    }
+	}
 
-    //ONLY used by MOVE_TO_MIDDLE and MOVE_TO_TOP modes
-    private void moveTo(double targetPos) {
-        double disR = targetPos - getRightEncPos();
-        double disL = targetPos - getLeftEncPos();
-        
-        double sigR = Math.signum(disR);
-        double sigL = Math.signum(disL);
+	/**
+	 * The most important method of the class.
+	 * It runs the whole logic of the class.
+	 * It the method is not executed - no output will be produced from the arm control system.
+	 * Must be called periodically (usually in teleopPeriodic()).
+	 */
+	public void tick() {
+		//Check for manual drive
+		double move = xbox.getRawAxis(RobotMap.XBOX_R_TRIGER) - xbox.getRawAxis(RobotMap.XBOX_L_TRIGGER);
+		if(Math.abs(move) > 0.15){
+			armMode = Mode.STOP; //Reset the current mode
 
-        double absR = Math.abs(disR);
-        double absL = Math.abs(disL);
-        
-        double slowDown = config.getDouble("slowDown");
-                
-        //If getting close - slow down
-        //I.E.: If position is less than the maximum speed * (100 for example)
-        // than move at a speed between maximum and 0.15
-        if(absR < speed * slowDown) {
-        	double s = disR / slowDown;
-        	sigR *= (s < 0.15 ? 0.15 : s);
-        } else
-        	sigR *= speed;
-        
-        if(absL <= speed * slowDown) {
-        	double s = disL / slowDown;
-        	sigL *= (s < 0.15 ? 0.15 : s);
-        } else
-        	sigL *= speed;
+			//Percentage at what the talons will move
+			//when one is going faster than the other one
+			double rightCut = 0.95;
+			double leftCut = 0.95;
 
-        //Move right
-        if (!rightDoneMoving) {
-        	//Stop when it's closer than 10 encoder distance units
-        	//Also, idiot proof, in case it moves over negative
-            if (absR <= 10 || (sigR < 0 && rightSwitch.get())) {
-                rightDoneMoving = true;
-                rightTalon.set(0);
-            } else
-                rightTalon.set(sigR);
-        }
+			//Determining if one talon is moving faster than the other one
+			double right = Math.abs(getRightEncPos()) > Math.abs(getLeftEncPos())
+					? rightCut : 1.0;
+			double left = Math.abs(getLeftEncPos()) > Math.abs(getRightEncPos())
+					? leftCut : 1.0;
 
-        //Move left
-        if (!leftDoneMoving) {
-            //Same as above
-            if (absL <= 10 || (sigL < 0 && leftSwitch.get())) {
-                leftDoneMoving = true;
-                leftTalon.set(0);
-            } else
-                leftTalon.set(sigL);
-        }
-    }
-    
-    boolean moveToRest(){
-    	boolean rightDone=false;
-    	boolean leftDone=false;
-    	
-    	//Move right to bottom
-    	if(rightSwitch.get()){
-    		rightDone = true;
-    		rightTalon.set(0);
-    		rightTalon.setPosition(0);
-    	} else 
-    		rightTalon.set(-speed);
-    	
-    	//Move left to bottom
-    	if(leftSwitch.get()){
-    		leftDone = true;
-    		leftTalon.set(0);
-    		leftTalon.setPosition(0);
-    	} else 
-    		leftTalon.set(-speed);
-    	
-    	
-    	return rightDone && leftDone;
-    }
-    
-    public void setMode(Mode mode){
-    	this.mode = mode;
-    }
-    public Mode getMode(){
-    	return mode;
-    }
+			//Move the talons based on their determined speeds
+			if((move < 0 && !rightSwitch.get())
+					|| (move > 0.0 && getRightEncPos() <= config.getDouble("posTop"))) //Check bottom and top limits
+				rightTalon.set(move * right);
+			else
+				rightTalon.set(0.0);
 
-    //Utils
-    //For some reason inverting the sensor input doesn't work with the talons.
-    //So we need to inverse it manually
-    public int getRightEncPos() {
-        return -rightTalon.getEncPosition();
-    }
+			if((move < 0 && !leftSwitch.get())
+					|| (move > 0.0 && getLeftEncPos() <= config.getDouble("posTop"))) //Check bottom and stop limits
+				leftTalon.set(move * left);
+			else
+				leftTalon.set(0.0);
 
-    public int getLeftEncPos() {
-        return -leftTalon.getEncPosition();
-    }
+			return;
+		} //end manual arm movement section
+
+		//Check the mode
+
+		//Emergency stop button
+		if (xbox.getRawButton(RobotMap.XBOX_BTN_X)) {
+			armMode = Mode.STOP;
+		}
+
+		//Move to rest button
+		else if (xbox.getRawButton(RobotMap.XBOX_BTN_A)) {
+			armMode = Mode.MOVE_TO_REST;
+		}
+
+		//Move to middle button
+		else if (xbox.getRawButton(RobotMap.XBOX_BTN_B)) {
+			armMode = Mode.MOVE_TO_MIDDLE;
+		}
+
+		//Move to top button
+		else if (xbox.getRawButton(RobotMap.XBOX_BTN_Y)) {
+			armMode = Mode.MOVE_TO_TOP;
+		}
+
+		//Pick up and move to middle
+		else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_R)){
+			armMode = Mode.PICK_UP_TO_MIDDLE;
+		}
+
+		//Pick up and move to top
+		else if (xbox.getRawButton(RobotMap.XBOX_BUMPER_L)){
+			armMode = Mode.PICK_UP_TO_TOP;
+		}
+
+
+		//Check the buttons
+		switch (armMode) {
+		case MOVE_TO_REST:
+			//Run "moveToRest". If it is done (returns TRUE), then stop arm.
+			if(moveToRest()) armMode = Mode.STOP;      	
+			break;
+
+		case MOVE_TO_MIDDLE:
+			//check if done
+			if (rightDoneMoving && leftDoneMoving) {
+				rightTalon.set(0.0);
+				leftTalon.set(0.0);
+
+				rightDoneMoving = false;
+				leftDoneMoving = false;
+
+				armMode = Mode.STOP;
+			}
+			//Not done? continue to move to middle
+			else {
+				moveTo(config.getDouble("posMiddle"));
+			}
+			break;
+
+		case MOVE_TO_TOP:
+			//Check if done
+			if (rightDoneMoving && leftDoneMoving) {
+				//Reset
+				rightTalon.set(0.0);
+				leftTalon.set(0.0);
+
+				rightDoneMoving = false;
+				leftDoneMoving = false;
+
+				armMode = Mode.STOP;
+			}
+			//Not done? continue to move to top
+			else {
+				moveTo(config.getDouble("posTop"));
+			}
+			break;
+
+		case PICK_UP_TO_MIDDLE:
+			//run moveToRest() and when it is completed, set mode to Move_To_Middle
+			if(moveToRest()) 
+				armMode = Mode.MOVE_TO_MIDDLE;
+			break;
+
+		case PICK_UP_TO_TOP:
+			//run moveToRest() and when it is completed, set mode to Move_To_Top
+			if(moveToRest()) 
+				armMode = Mode.MOVE_TO_TOP;
+			break;
+
+			//Emergency stop button? What would ever get to this case?
+		default:
+			//Reset stuff
+			rightDoneMoving = false;
+			leftDoneMoving = false;
+			rightTalon.set(0.0);
+			leftTalon.set(0.0);
+		}
+	}
+
+	//ONLY used by MOVE_TO_MIDDLE and MOVE_TO_TOP modes
+	private void moveTo(double targetPos) {
+		double distR = targetPos - getRightEncPos();
+		double distL = targetPos - getLeftEncPos();
+
+		double sigR = Math.signum(distR);
+		double sigL = Math.signum(distL);
+
+		double absR = Math.abs(distR);
+		double absL = Math.abs(distL);
+
+		double slowDown = config.getDouble("slowDown");
+
+		//If getting close - slow down
+		//I.E.: If position is less than the maximum speed * (100 for example)
+		// than move at a speed between maximum and 0.15
+
+		/*** This whole section needs rewriting so that it is understandable. 
+		 *** If we're getting signum, why are we multiplying it by something? ***/
+		if(absR < speed * slowDown) {
+			double s = distR / slowDown;	//need to explain what 's' is.
+			sigR *= (s < 0.15 ? 0.15 : s);
+		} else
+			sigR *= speed;
+
+		if(absL <= speed * slowDown) {
+			double s = distL / slowDown;
+			sigL *= (s < 0.15 ? 0.15 : s);
+		} else
+			sigL *= speed;
+
+		//Move right
+		if (!rightDoneMoving) {
+			//Stop when it's closer than 10 encoder distance units
+			//Also, idiot proof, in case it moves over negative
+			if (absR <= 10.0 || (sigR < 0 && rightSwitch.get())) {
+				rightDoneMoving = true;
+				rightTalon.set(0.0);
+			} else
+				rightTalon.set(sigR);
+		}
+
+		//Move left
+		if (!leftDoneMoving) {
+			//Same as above
+			if (absL <= 10.0 || (sigL < 0.0 && leftSwitch.get())) {
+				leftDoneMoving = true;
+				leftTalon.set(0.0);
+			} else
+				leftTalon.set(sigL);
+		}
+	}
+
+	boolean moveToRest(){
+		boolean rightDone=false;
+		boolean leftDone=false;
+
+		//Move right to bottom
+		if(rightSwitch.get()){
+			rightDone = true;
+			rightTalon.set(0.0);
+			rightTalon.setPosition(0.0);
+		} else 
+			rightTalon.set(-speed);
+
+		//Move left to bottom
+		if(leftSwitch.get()){
+			leftDone = true;
+			leftTalon.set(0.0);
+			leftTalon.setPosition(0.0);
+		} else 
+			leftTalon.set(-speed);
+
+
+		return rightDone && leftDone;
+	}
+
+	//stop arm moving -- called from Robot.java (limit switch)
+	public void stop() {
+		armMode = Mode.STOP;
+	}
+
+	public void setMode(Mode mode){
+		this.armMode = mode;
+	}
+	public Mode getMode(){
+		return armMode;
+	}
+
+	//Utils
+	//For some reason inverting the sensor input doesn't work with the talons.
+	//So we need to inverse it manually
+	public int getRightEncPos() {
+		return -rightTalon.getEncPosition();
+	}
+
+	public int getLeftEncPos() {
+		return -leftTalon.getEncPosition();
+	}
 }
