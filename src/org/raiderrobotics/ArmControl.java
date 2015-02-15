@@ -49,7 +49,7 @@ public class ArmControl {
 	static final double ARMSPEED = 0.8;
 	static final double SLOWDOWN = 500.0;
 
-	double speed = 0.5; //autonomous move speed
+	double autonomousSpeed = 0.5; //autonomous move speed
 
 	Joystick xbox;
 
@@ -130,11 +130,11 @@ public class ArmControl {
 		leftTalon.setPosition(0);
 		rightTalon.setPosition(0);
 
-		speed = ARMSPEED;
+		autonomousSpeed = ARMSPEED;
 		//fix: NEVER compare a double to any other number using ==
 		//if (speed == 0.0)
-		if (Math.abs(speed) < 0.08)		//which number should we use?
-			speed = 0.5;
+		if (Math.abs(autonomousSpeed) < 0.08)		//which number should we use?
+			autonomousSpeed = 0.5;
 
 		rightDoneMoving = false;
 		leftDoneMoving = false;
@@ -157,14 +157,27 @@ public class ArmControl {
 
 			//Percentage at what the talons will move
 			//when one is going faster than the other one
-			double rightCut = 0.95;
-			double leftCut = 0.95;
+			//0.95 might not be enough to balance
+			double rightCut = 0.80;
+			double leftCut = 0.80;
+			
+			double right, left;
+			
+			double rightHeight = Math.abs(getRightEncPos()); //the distance of right arm to bottom
+			double leftHeight = Math.abs(getLeftEncPos());
 
 			//Determining if one talon is moving faster than the other one
-			double right = Math.abs(getRightEncPos()) > Math.abs(getLeftEncPos())
-					? rightCut : 1.0;
-			double left = Math.abs(getLeftEncPos()) > Math.abs(getRightEncPos())
-					? leftCut : 1.0;
+			if(move>0){ //moving up, the longer the distance, the faster the arm should go	
+				
+				right = rightHeight > leftHeight ? rightCut : 1.0;
+				left = leftHeight > rightHeight ? leftCut : 1.0;
+				
+			}else{ //moving down, the longer the distance, the slower the arm should go
+				
+				right = rightHeight < leftHeight ? rightCut : 1.0;
+				left = leftHeight < rightHeight ? leftCut : 1.0;
+				
+			}
 
 			//Move the talons based on their determined speeds
 			if((move < 0 && !rightSwitch.get())
@@ -293,13 +306,17 @@ public class ArmControl {
 		double distR = targetPos - getRightEncPos();
 		double distL = targetPos - getLeftEncPos();
 
-		double sigR = Math.signum(distR);
-		double sigL = Math.signum(distL);
+		double dirR = Math.signum(distR);
+		double dirL = Math.signum(distL);
 
 		double absR = Math.abs(distR);
 		double absL = Math.abs(distL);
+		
+		double 	speedR = autonomousSpeed,
+				speedL = autonomousSpeed;
+		
 
-		double slowDown = SLOWDOWN;
+		double slowDown = SLOWDOWN; //SLOWDOWN = 500.0;
 
 		//If getting close - slow down
 		//I.E.: If position is less than the maximum speed * (100 for example)
@@ -307,51 +324,81 @@ public class ArmControl {
 
 		/*** This whole section needs rewriting so that it is understandable. 
 		 *** If we're getting signum, why are we multiplying it by something? ***/
-		if(absR < speed * slowDown) {
-			double s = distR / slowDown;	//need to explain what 's' is.
-			sigR *= (s < 0.15 ? 0.15 : s);
+		
+		
+		//oh wow, what a massive weird chunck of code!
+		//but don't worry. It's not that hard to understand! :D
+		//decelerationThreshold always has the range from 0 to autonomousSpeed.
+		
+		if(absR < autonomousSpeed * slowDown) { //first, it looks after brake. If the absR is very small, meaning there isn't a great distance between the target and the arm, therefore, the armm needs to move slower inorder to brake.
+			double decelerationThreshold = absR / slowDown;	// If the decelerationThreshold is a number that detects if the motor needs to stop decelerating. If the absR is very big, meaning there's NOT a lot of space between the arm and the target, so no need to stop decelerating :D 
+			speedR = dirR * (decelerationThreshold < 0.15 ? 0.15 : decelerationThreshold); //The threshold itself is a speed factor unevenly goes from maximum speed, 0.5 to 0. The closer it is to the target, the lower the value. Since we don't want the arm to go too slow, the value can't be lower than 0.15.
+			speedR = absR > absL ? dirR*0.10 : speedR; //balance speed: so yeah, quite straight forward. If one is going too fast, the arm speed will drop to 0.1
 		} else
-			sigR *= speed;
+			speedR = dirR*(absR > absL ? (autonomousSpeed - 0.15) : autonomousSpeed); //balance speed, if one arm is going faster than the other, the the speed will drop 1.5. If not, it goes normal speed.
 
-		if(absL <= speed * slowDown) {
-			double s = distL / slowDown;
-			sigL *= (s < 0.15 ? 0.15 : s);
+		if(absL < autonomousSpeed * slowDown) {
+			double decelerationThreshold = absL / slowDown;
+			speedL = dirL * (decelerationThreshold < 0.15 ? 0.15 : decelerationThreshold);
+			speedL = absL > absR ? dirL*0.10 : speedL; //balance speed
 		} else
-			sigL *= speed;
+			speedL = dirL*(absL > absR ? (autonomousSpeed - 0.15) : autonomousSpeed); //balance speed
 
+		
 		//Move right
 		if (!rightDoneMoving) {
 			//Stop when it's closer than 10 encoder distance units
 			//Also, idiot proof, in case it moves over negative
-			if (absR <= 10.0 || (sigR < 0 && rightSwitch.get())) {
+			if (absR <= 10.0 || (dirR < 0.0 && rightSwitch.get())) {
 				rightDoneMoving = true;
 				rightTalon.set(0.0);
 			} else
-				rightTalon.set(sigR);
+				rightTalon.set(speedR);
 		}
 
 		//Move left
 		if (!leftDoneMoving) {
 			//Same as above
-			if (absL <= 10.0 || (sigL < 0.0 && leftSwitch.get())) {
+			if (absL <= 10.0 || (dirL < 0.0 && leftSwitch.get())) {
 				leftDoneMoving = true;
 				leftTalon.set(0.0);
 			} else
-				leftTalon.set(sigL);
+				leftTalon.set(speedL);
 		}
 	}
 
 	boolean moveToRest(){
 		boolean rightDone=false;
 		boolean leftDone=false;
-
+		
+		double  rightCut = 0.8,
+				leftCut = 0.8;
+		
+		double right, left;
+		
+		double 	rightHeight = getRightEncPos(),
+				leftHeight = getLeftEncPos();
+		
+		//balance speed
+		if(rightHeight < leftHeight){ //the right arm is closer to the target
+			right = rightCut * autonomousSpeed;
+		}else{
+			right = autonomousSpeed;
+		}
+		
+		if(leftHeight < rightHeight){ //the right arm is closer to the target
+			left = leftCut * autonomousSpeed;
+		}else{
+			left = autonomousSpeed;
+		}
+		
 		//Move right to bottom
 		if(rightSwitch.get()){
 			rightDone = true;
 			rightTalon.set(0.0);
 			rightTalon.setPosition(0.0);
 		} else 
-			rightTalon.set(-speed);
+			rightTalon.set(-right);
 
 		//Move left to bottom
 		if(leftSwitch.get()){
@@ -359,7 +406,7 @@ public class ArmControl {
 			leftTalon.set(0.0);
 			leftTalon.setPosition(0.0);
 		} else 
-			leftTalon.set(-speed);
+			leftTalon.set(-left);
 
 
 		return rightDone && leftDone;
