@@ -29,7 +29,8 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
-		//this is supposed to shut off the motors when joystick is at zero to save power.  Does it work only on Jaguars?
+		/* deatBandElimination is supposed to shut off the motors when joystick is at zero to save power.  
+		 * It is part of the PWM motor controller class. It does not exist in CAN mode.		 */
 		talon1.enableDeadbandElimination(true);
 		talon2.enableDeadbandElimination(true);
 
@@ -48,13 +49,14 @@ public class Robot extends IterativeRobot {
 		xbox360arm = new Joystick(XBOX1_PORT);
 
         armControl = new ArmControl(xbox360arm);
-		armControl.debug = true;
+		//armControl.debug = true;
 		
-		binArmSystem = new BinArmSystem(xbox360arm,armControl);
+		binArmSystem = new BinArmSystem(xbox360arm, armControl);
 		
         encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
+		
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL);
 		autoProgram.setProgram(AUTO_RECYCLE);
 		
@@ -171,8 +173,6 @@ public class Robot extends IterativeRobot {
 		// the camera name (ex "cam0") can be found through the roborio web interface
 		cameraSession = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
 		NIVision.IMAQdxConfigureGrab(cameraSession);
-	
-	
 	}
 
 }

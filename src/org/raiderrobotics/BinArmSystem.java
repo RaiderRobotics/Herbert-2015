@@ -17,7 +17,7 @@ public class BinArmSystem {
 		this.armControl = armControl;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
 		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
-		limitSwitch = new DigitalInput(LIMIT_SWITCH_PORT);
+		limitSwitch = new DigitalInput(TOP_LIMIT_SWITCH_PORT);
 	}
 	
 	public void tick(){

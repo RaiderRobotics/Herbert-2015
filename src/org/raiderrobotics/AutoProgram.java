@@ -61,12 +61,15 @@ public class AutoProgram {
 		}
 	}
 
-	//TODO: test this 
+/* We intended to rewrite using multiplication factor; 
+* talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a correction for speed=0.0
+* We tried the mulplication method. It didn't work as intended. This one does. So let's leave it like this for now.
+* The mutiplication code is underneath this, commented out.
+*/
 	public void rampToSpeed(Talon talon, double speed){
 		if (speed >= 0.0) {	//ramp up to positive speed
 			if (talon.get() < speed) {
-				//TODO: rewrite using multiplication factor; 
-				//talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a zero.
+				
 				talon.set (talon.get() + TALONRAMPINCREMENT); //add 10% each time (now 5%)
 			} else {
 				talon.set(speed);
