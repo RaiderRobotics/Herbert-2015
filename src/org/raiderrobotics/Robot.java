@@ -48,12 +48,13 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-        armControl = ArmControl.setupInstance(xbox360arm);
+        	armControl = ArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
 		
-		binArmSystem = new BinArmSystem(xbox360arm, armControl);
+		//make an ArmControl instance in BinArmSystem in order to access armControl
+		binArmSystem = new BinArmSystem(xbox360arm);
 		
-        encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
+        	encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
 		
@@ -62,11 +63,10 @@ public class Robot extends IterativeRobot {
 		
 		setUpSmartDashboard();
 		setUpCamera();
-
 	}
 
 	public void disabledInit() {
-        armControl.reset();
+        	armControl.reset();
 		talon1.stopMotor();
 		talon2.stopMotor();		
 		NIVision.IMAQdxStopAcquisition(cameraSession);
@@ -101,13 +101,13 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
         
-        normalDrive();
+        	normalDrive();
 
-        armControl.tick();
+        	armControl.tick();
         
-        binArmSystem.tick();
+        	binArmSystem.tick();
 
-        if (gyro1.isTurning()) gyro1.continueTurning();
+        	if (gyro1.isTurning()) gyro1.continueTurning();
 		
  		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
