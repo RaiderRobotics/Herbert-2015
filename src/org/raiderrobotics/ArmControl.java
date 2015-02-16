@@ -161,7 +161,7 @@ public class ArmControl {
 			double rightCut = 0.80;
 			double leftCut = 0.80;
 			
-			double right, left;
+			double right, left; //sorry, these two are the left speed and right speed... 
 			
 			double rightHeight = Math.abs(getRightEncPos()); //the distance of right arm to bottom
 			double leftHeight = Math.abs(getLeftEncPos());
@@ -313,7 +313,7 @@ public class ArmControl {
 		double absL = Math.abs(distL);
 		
 		double 	speedR = autonomousSpeed,
-				speedL = autonomousSpeed;
+			speedL = autonomousSpeed;
 		
 
 		double slowDown = SLOWDOWN; //SLOWDOWN = 500.0;
@@ -374,7 +374,8 @@ public class ArmControl {
 		double  rightCut = 0.8,
 				leftCut = 0.8;
 		
-		double right, left;
+		double right, left; //these are the speed of right and left
+		//same algrithm that was used in tick()
 		
 		double 	rightHeight = getRightEncPos(),
 				leftHeight = getLeftEncPos();
