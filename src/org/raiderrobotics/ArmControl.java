@@ -62,6 +62,17 @@ public class ArmControl {
 	//    private int balancePosition=0;
 	//    private boolean balanceRight;
 
+	static private ArmControl instance;
+	public static ArmControl setupInstance(Joystick joystick){
+		if(instance == null)
+			instance = new ArmControl(joystick);
+		return instance;
+	}
+
+	public static ArmControl getInstance(){
+		return instance;
+	}
+
 	/**
 	 * Create the arm lift control system.
 	 * Responsible for lifting and lowering the arm.
@@ -69,7 +80,7 @@ public class ArmControl {
 	 *
 	 * @param xbox The arm controller reference
 	 */
-	ArmControl(Joystick xbox) {
+	private ArmControl(Joystick xbox) {
 		this.xbox = xbox;
 
 		//configure both talons

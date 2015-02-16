@@ -48,7 +48,7 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-        armControl = new ArmControl(xbox360arm);
+        armControl = ArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
 		
 		binArmSystem = new BinArmSystem(xbox360arm, armControl);

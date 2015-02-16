@@ -10,6 +10,8 @@ public class AutoProgram {
 
 	boolean inAutoZone = false;
 
+	//TODO: Note to use ArmControl system do ArmControl.getInstance() to retreat it's instance.
+
 	AutoProgram(Talon talonLeft, Talon talonRight, Encoder encoderA){
 		talon1 = talonLeft;
 		talon2 = talonRight;
