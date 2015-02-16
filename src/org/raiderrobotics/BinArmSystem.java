@@ -8,16 +8,17 @@ import edu.wpi.first.wpilibj.Joystick;
 public class BinArmSystem {
 	CANTalon talonPulley, talonTwister;
 	Joystick xbox;
-    DigitalInput limitSwitch;
+    	DigitalInput limitSwitch;
 	double pulleyPower;
 	ArmControl armControl;
 	
-	BinArmSystem(Joystick xbox, ArmControl armControl){
+	BinArmSystem(Joystick xbox){
 		this.xbox = xbox;
 		this.armControl = armControl;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
 		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
 		limitSwitch = new DigitalInput(TOP_LIMIT_SWITCH_PORT);
+		armControl = ArmControl.getInstance();
 	}
 	
 	public void tick(){
