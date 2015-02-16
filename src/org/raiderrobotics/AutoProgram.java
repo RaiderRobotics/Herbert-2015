@@ -7,15 +7,17 @@ public class AutoProgram {
 	Talon talon1, talon2;
 	Encoder distEncoder;
 	int programUsed = AUTO_RECYCLE; //default
-
+	ArmControl armControl;
 	boolean inAutoZone = false;
 
-	//TODO: Note to use ArmControl system do ArmControl.getInstance() to retreat it's instance.
+	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
+	//      then you can access the non-private functions in it.
 
 	AutoProgram(Talon talonLeft, Talon talonRight, Encoder encoderA){
 		talon1 = talonLeft;
 		talon2 = talonRight;
 		distEncoder = encoderA;
+		armControl = ArmControl.getInstance();
 	}
 
 	void init(){
