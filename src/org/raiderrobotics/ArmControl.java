@@ -30,9 +30,11 @@ public class ArmControl {
 	//(these numbers are also stored in a config file on the roboRIO
 	static final double POS_TOP = 6500.0;
 	static final double POS_MIDDLE = 4000.0;
-	static final double ARMSPEED = 0.8;
+	static final double ARMSPEED = 1.0; // was 0.8;
 	static final double SLOWDOWN_REGION = 500.0;
-
+	static final double LSPEED_MULT = 1.00;
+	static final double RSPEED_MULT = 0.95;	//the right motor is a bit faster than the left, so slow it down
+	
 	//this is the base speed that the arms move at.
 	//It can is often set to the contant ARMSPEED but then changed to 0.5
 	//It is used as a starting point to calculate the slowdown speed.
@@ -305,15 +307,21 @@ public class ArmControl {
 		if(absR < baseSpeed * SLOWDOWN_REGION) {	//not that slowDown is being scaled by mutiplying it by speed.
 			double slowDownSpeed = distR / SLOWDOWN_REGION;	//calculate the slowdown speed
 			speedR *= Math.max(slowDownSpeed, 0.15); //do not permit a slowDown speed to be less than 0.15
+			//WAS: //speedR *= (slowDownSpeed < 0.15 ? 0.15 : slowDownSpeed);
 		} else //not in slowdown region -- move at normal speed
 			speedR *= baseSpeed;
 
 		if(absL <= baseSpeed * SLOWDOWN_REGION) {
 			double slowDownSpeed = distL / SLOWDOWN_REGION;
-			speedR *= Math.max(slowDownSpeed, 0.15);
+			speedL *= Math.max(slowDownSpeed, 0.15);
 		} else
 			speedL *= baseSpeed;
 
+		//now that speeds have been calculated, adjust for different motors
+		speedL *= LSPEED_MULT;
+		speedR *= RSPEED_MULT;
+		
+		
 		//Move right
 		if (!rightDoneMoving) {
 			//Stop when it's closer than 10 encoder distance units
