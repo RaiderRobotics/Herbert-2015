@@ -46,10 +46,10 @@ public class ArmControl {
 	//fill these in from the config file values once we figure out what they are.
 	static final double POS_TOP = 6500.0;
 	static final double POS_MIDDLE = 4000.0;
-	static final double ARMSPEED = 0.8;
+	static final double ARMSPEED = 1.0;
 	static final double SLOWDOWN = 500.0;
 
-	double autonomousSpeed = 0.5; //autonomous move speed
+	double autonomousSpeed = 1.0; //autonomous move speed
 
 	Joystick xbox;
 
@@ -333,16 +333,16 @@ public class ArmControl {
 		if(absR < autonomousSpeed * slowDown) { //first, it looks after brake. If the absR is very small, meaning there isn't a great distance between the target and the arm, therefore, the armm needs to move slower inorder to brake.
 			double decelerationThreshold = absR / slowDown;	// If the decelerationThreshold is a number that detects if the motor needs to stop decelerating. If the absR is very big, meaning there's NOT a lot of space between the arm and the target, so no need to stop decelerating :D 
 			speedR = dirR * (decelerationThreshold < 0.15 ? 0.15 : decelerationThreshold); //The threshold itself is a speed factor unevenly goes from maximum speed, 0.5 to 0. The closer it is to the target, the lower the value. Since we don't want the arm to go too slow, the value can't be lower than 0.15.
-			speedR = absR > absL ? dirR*0.10 : speedR; //balance speed: so yeah, quite straight forward. If one is going too fast, the arm speed will drop to 0.1
+			speedR = absR < absL ? dirR*0.10 : speedR; //balance speed: so yeah, quite straight forward. If one is going too fast, the arm speed will drop to 0.1
 		} else
-			speedR = dirR*(absR > absL ? (autonomousSpeed - 0.15) : autonomousSpeed); //balance speed, if one arm is going faster than the other, the the speed will drop 1.5. If not, it goes normal speed.
+			speedR = dirR*(absR < absL ? (autonomousSpeed * 0.8) : autonomousSpeed); //balance speed, if one arm is going faster than the other, the the speed will drop to 0.8. If not, it goes normal speed.
 
 		if(absL < autonomousSpeed * slowDown) {
 			double decelerationThreshold = absL / slowDown;
 			speedL = dirL * (decelerationThreshold < 0.15 ? 0.15 : decelerationThreshold);
-			speedL = absL > absR ? dirL*0.10 : speedL; //balance speed
+			speedL = absL < absR ? dirL*0.10 : speedL; //balance speed
 		} else
-			speedL = dirL*(absL > absR ? (autonomousSpeed - 0.15) : autonomousSpeed); //balance speed
+			speedL = dirL*(absL < absR ? (autonomousSpeed  * 0.8) : autonomousSpeed); //balance speed
 
 		
 		//Move right
