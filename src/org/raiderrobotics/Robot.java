@@ -4,12 +4,12 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Joystick.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import static org.raiderrobotics.RobotMap.*;
 
-////All old vision code
-////import com.ni.vision.NIVision;
+import com.ni.vision.NIVision;
 //import com.ni.vision.NIVision.DrawMode;
-////import com.ni.vision.NIVision.Image;
+import com.ni.vision.NIVision.Image;
 //import com.ni.vision.NIVision.ShapeMode;
 
 
@@ -23,9 +23,8 @@ public class Robot extends IterativeRobot {
 	ArmControl armControl;
 	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
-	CameraServer cameraServer;
-	////int cameraSession;
-	////Image imageFrame;
+	int cameraSession;
+	Image imageFrame;
 	
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
@@ -70,8 +69,7 @@ public class Robot extends IterativeRobot {
         	armControl.reset();
 		talon1.stopMotor();
 		talon2.stopMotor();		
-		////NIVision.IMAQdxStopAcquisition(cameraSession);
-		//no way to shut off the camera server
+		NIVision.IMAQdxStopAcquisition(cameraSession);
 	}
 
 	public void autonomousInit() {
@@ -85,7 +83,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
-		////NIVision.IMAQdxStartAcquisition(cameraSession);
+		NIVision.IMAQdxStartAcquisition(cameraSession);
 	}
 
 	/* This method contains all buttons and joysticks.
@@ -112,9 +110,9 @@ public class Robot extends IterativeRobot {
         	if (gyro1.isTurning()) gyro1.continueTurning();
 		
  		//update camera image
-		////NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
+		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
 		//NIVision.imaqDrawShapeOnImage(imageFrame, imageFrame, new NIVision.Rect(10, 10, 100, 100) , DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
-		////CameraServer.getInstance().setImage(imageFrame);
+		CameraServer.getInstance().setImage(imageFrame);
 	}
 
 	// Drive the robot normally, apply speed boost if needed
@@ -171,14 +169,10 @@ public class Robot extends IterativeRobot {
 	}
 
 	void setUpCamera() {
-		cameraServer = CameraServer.getInstance();
-        cameraServer.setQuality(50);
-        //the camera name (ex "cam0") can be found through the roborio web interface
-        cameraServer.startAutomaticCapture("cam0");
-		////imageFrame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
+		imageFrame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
 		// the camera name (ex "cam0") can be found through the roborio web interface
-		////cameraSession = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-		/////NIVision.IMAQdxConfigureGrab(cameraSession);
+		cameraSession = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+		NIVision.IMAQdxConfigureGrab(cameraSession);
 	}
 
 }
