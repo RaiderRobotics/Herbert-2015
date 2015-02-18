@@ -14,7 +14,6 @@ public class BinArmSystem {
 	
 	BinArmSystem(Joystick xbox){
 		this.xbox = xbox;
-		this.armControl = armControl;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
 		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
 		limitSwitch = new DigitalInput(TOP_LIMIT_SWITCH_PORT);
@@ -33,8 +32,8 @@ public class BinArmSystem {
 			}
 			
 		}else{ // bin motor has hit switch at top
-			talonPulley.set(-0.2);
-			armControl.stop();
+			talonPulley.set(-0.2);	//maintain 20% power.
+			//armControl.stop();  //this does not work for all cases reliably
 		}
 		//twister system
 		talonTwister.set(xbox.getRawAxis(XBOX_R_XAXIS)*0.8);
