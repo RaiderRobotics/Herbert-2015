@@ -28,8 +28,12 @@ public class ArmControl {
 	DigitalInput leftSwitch;
 
 	//(these numbers are also stored in a config file on the roboRIO
-	static final double POS_TOP = 6500.0;
-	static final double POS_MIDDLE = 4000.0;
+//	static final double POS_TOP = 6500.0;
+//	static final double POS_MIDDLE = 4000.0;
+	//for ROBOT #2
+	static final double POS_TOP = 8000.0;
+	static final double POS_MIDDLE = 5000.0;
+	
 	static final double ARMSPEED = 1.0; // was 0.8;
 	static final double SLOWDOWN_REGION = 500.0;
 	static final double LSPEED_MULT = 1.00;
