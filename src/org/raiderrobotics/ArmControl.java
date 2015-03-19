@@ -37,7 +37,8 @@ public class ArmControl {
 	static final double ARMSPEED = 1.0; // was 0.8;
 	static final double SLOWDOWN_REGION = 500.0;
 	static final double LSPEED_MULT = 1.00;
-	static final double RSPEED_MULT = 0.93;	//the right motor is a bit faster than the left, so slow it down. 
+	static final double RSPEED_MULT = 1.00;  //for robot #2 only
+	//static final double RSPEED_MULT = 0.93;	//the right motor is a bit faster than the left, so slow it down. 
 		//tried 0.90 and 0.95
 	
 	//this is the base speed that the arms move at.
