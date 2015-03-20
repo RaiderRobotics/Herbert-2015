@@ -48,13 +48,13 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-        	armControl = ArmControl.setupInstance(xbox360arm);
+        armControl = ArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
 		
 		//make an ArmControl instance in BinArmSystem in order to access armControl
 		binArmSystem = new BinArmSystem(xbox360arm);
 		
-        	encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
+        encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
 		
@@ -127,11 +127,11 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BUMPER_R)) {//high speed mode
 			double x2max = xbox360drive.getX() * (MAXSPEED / 100.0);
 			double y2max = xbox360drive.getY() * (MAXSPEED / 100.0);
-			driveTrain1.arcadeDrive(y2max, x2max, true); //use squared inputs
+			driveTrain1.arcadeDrive(y2max, x2max, false); //use squared inputs. Herbert#2: set to false
 		} else {
 			double x2norm = xbox360drive.getX() * (NORMSPEED / 100.0);
 			double y2norm = xbox360drive.getY() * (NORMSPEED / 100.0);
-			driveTrain1.arcadeDrive(y2norm, x2norm, true);
+			driveTrain1.arcadeDrive(y2norm, x2norm, false);
 		}
 	}
 

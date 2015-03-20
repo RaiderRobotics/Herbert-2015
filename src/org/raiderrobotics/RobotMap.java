@@ -15,7 +15,7 @@ public final class RobotMap {
 	/* FINAL constants */
 	//final static int ARCADE = 1;
 	//final static int TANK = 2;
-	final static int NORMSPEED = 80;	//% speed of normal driving
+	final static int NORMSPEED = 75;	//% speed of normal driving
 	final static int MAXSPEED = 100;	
 	
 	/* joysticks and buttons */
@@ -75,7 +75,8 @@ public final class RobotMap {
 	final static int AUTO_RECYCLE = 0;
 	final static int AUTO_TOTE = 1;
 	final static int AUTO_MULTITOTE = 2;
-
+	
+	//NOTE!!! THe following 4 settings are for HERBERT V1, not the second one that we built.
 	final static double AUTO_ZONE_DISTANCE = 3000.0;
 	final static double AUTO_BACKUP_DISTANCE = -500.0;
 	final static double AUTO_SPEED_FWD = 0.8;

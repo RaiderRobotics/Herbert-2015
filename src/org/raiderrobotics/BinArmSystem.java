@@ -8,10 +8,10 @@ import edu.wpi.first.wpilibj.Joystick;
 public class BinArmSystem {
 	CANTalon talonPulley, talonTwister;
 	Joystick xbox;
-    	DigitalInput limitSwitch;
+	DigitalInput limitSwitch;
 	double pulleyPower;
 	ArmControl armControl;
-	
+
 	BinArmSystem(Joystick xbox){
 		this.xbox = xbox;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
@@ -19,7 +19,7 @@ public class BinArmSystem {
 		limitSwitch = new DigitalInput(TOP_LIMIT_SWITCH_PORT);
 		armControl = ArmControl.getInstance();
 	}
-	
+
 	public void tick(){
 		//pulley system. !limitSwitch.get() -- this means that the switch is still open.
 		if(!limitSwitch.get()){
@@ -30,13 +30,13 @@ public class BinArmSystem {
 			}else{
 				talonPulley.set(pulleyPower*-0.3); //going down
 			}
-			
+
 		}else{ // bin motor has hit switch at top
 			talonPulley.set(-0.2);	//maintain 20% power.
 			//armControl.stop();  //this does not work for all cases reliably
 		}
 		//twister system
 		talonTwister.set(xbox.getRawAxis(XBOX_R_XAXIS)*0.8);
-		
+
 	}
 }
