@@ -58,7 +58,7 @@ public class Robot extends IterativeRobot {
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
 		
-		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL);
+		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL, gyro1);
 		autoProgram.setProgram(AUTO_RECYCLE);
 		
 		setUpSmartDashboard();

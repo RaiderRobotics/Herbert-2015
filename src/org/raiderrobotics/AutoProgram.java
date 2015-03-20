@@ -17,13 +17,13 @@ public class AutoProgram {
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
 
-	AutoProgram(Talon talonLeft, Talon talonRight, Encoder encoderA){
+	AutoProgram(Talon talonLeft, Talon talonRight, Encoder encoderA, Gyro gyroInput){
 		talon1 = talonLeft;
 		talon2 = talonRight;
 		distEncoder = encoderA;
 		armControl = ArmControl.getInstance();
 		
-		gyro = new Gyro( new AnalogInput(0));
+		gyro = gyroInput;
 		gyro.reset();
 		gyro.setSensitivity(0.007);
 	}
@@ -44,6 +44,7 @@ public class AutoProgram {
 			autoRecycle();
 			break;
 		case AUTO_TOTE:
+			autoTote();
 			break;
 		case AUTO_MULTITOTE:
 			autoMutitote();
