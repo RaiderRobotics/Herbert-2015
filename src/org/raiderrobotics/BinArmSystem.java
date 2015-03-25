@@ -37,6 +37,7 @@ public class BinArmSystem {
 		}
 		//twister system
 		talonTwister.set(xbox.getRawAxis(XBOX_R_XAXIS)*0.8);
-
 	}
+	
+	
 }

@@ -35,14 +35,18 @@ public class ArmControl {
 //	static final double POS_TOP = 6500.0;
 //	static final double POS_MIDDLE = 4000.0;
 	
-	static final double POS_TOP = 8000.0;
-	static final double POS_MIDDLE = 5000.0;
+	static final double POS_TOP = 4100.0;
+	static final double POS_MIDDLE = 2300.0;
 	static final double ARMSPEED = 1.0; // was 0.8;
-	static final double SLOWDOWN_REGION = 500.0;
+	static final double SLOWDOWN_REGION = 250.0;
 	static final double LSPEED_MULT = 1.00;
 //	static final double RSPEED_MULT = 0.93;	//the right motor is a bit faster than the left, so slow it down. 
-	static final double RSPEED_MULT = 1.00;	//the right motor is a bit faster than the left, so slow it down. 
+	static final double RSPEED_MULT = 0.96;	//the right motor is a bit faster than the left, so slow it down. 
 		//tried 0.90 and 0.95
+	
+	static final int	RIGHT = 1,
+						LEFT = 2; //used for rumble
+				
 	
 	//this is the base speed that the arms move at.
 	//It can is often set to the contant ARMSPEED but then changed to 0.5
@@ -179,7 +183,6 @@ public class ArmControl {
 				rightTalon.set(move * right);
 			else{
 				rightTalon.set(0.0);
-				startRumble(2);
 			}
 
 
@@ -206,7 +209,7 @@ public class ArmControl {
 		//Emergency stop button
 		if (xbox.getRawButton(XBOX_BTN_X)) {
 			armMode = Mode.STOP;
-			startRumble(1);
+			startRumble(RIGHT);
 		}
 
 		//Move to rest button
@@ -357,7 +360,6 @@ public class ArmControl {
 			if (absR <= 10.0 || (speedR < 0 && rightSwitch.get())) {
 				rightDoneMoving = true;
 				rightTalon.set(0.0);
-				startRumble(2);
 			} else
 				rightTalon.set(speedR);
 		}
@@ -370,6 +372,10 @@ public class ArmControl {
 				leftTalon.set(0.0);
 			} else
 				leftTalon.set(speedL);
+		}
+		
+		if(rightSwitch.get()){
+			startRumble(LEFT);
 		}
 	}
 
@@ -408,6 +414,8 @@ public class ArmControl {
 	public Mode getMode(){
 		return armMode;
 	}
+
+	//For some reason inverting the sensor input doesn't work with the talons.
 	
 	/*
 	private void startRumble() {
@@ -416,24 +424,25 @@ public class ArmControl {
 		rumbleCounter = 50;
 	}
 */
-	//For some reason inverting the sensor input doesn't work with the talons.
 	private void startRumble(int side){//side 1 is right, 2 is left
 		
-		if(side == 1){
+		if(side == RIGHT){
 			if(rightRumbleCount == 0){
 				rightRumbleCount = 1;
 			}
-			isRightRumbleDone();
+			xbox.setRumble(Joystick.RumbleType.kRightRumble, 1.0f);
+			//isRightRumbleDone();
 		}else{
 			if(leftRumbleCount == 0){
 				leftRumbleCount = 1;
 			}
-			isLeftRumbleDone();
+			xbox.setRumble(Joystick.RumbleType.kLeftRumble, 1.0f);
 		}
 	}
+	
 	private boolean isRightRumbleDone(){ 
 		if(rightRumbleCount>0){
-			xbox.setRumble(Joystick.RumbleType.kRightRumble, 1.0f);
+			//xbox.setRumble(Joystick.RumbleType.kRightRumble, 1.0f);
 			rightRumbleCount--;
 			return false;
 		}else{ //stop
@@ -444,7 +453,6 @@ public class ArmControl {
 	}
 	private boolean isLeftRumbleDone(){
 		if(leftRumbleCount>0){
-			xbox.setRumble(Joystick.RumbleType.kLeftRumble, 1.0f);
 			leftRumbleCount--;
 			return false;
 		}else{ //stop
