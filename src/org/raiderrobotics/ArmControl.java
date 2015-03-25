@@ -35,7 +35,7 @@ public class ArmControl {
 //	static final double POS_TOP = 6500.0;
 //	static final double POS_MIDDLE = 4000.0;
 	
-	static final double POS_TOP = 4100.0;
+	static final double POS_TOP = 4200.0;
 	static final double POS_MIDDLE = 2300.0;
 	static final double ARMSPEED = 1.0; // was 0.8;
 	static final double SLOWDOWN_REGION = 250.0;
@@ -385,7 +385,6 @@ public class ArmControl {
 			rightDone = true;
 			rightTalon.set(0.0);
 			rightTalon.setPosition(0.0);
-			startRumble(LEFT);
 		} else 
 			rightTalon.set(-baseSpeed);
 
@@ -396,7 +395,8 @@ public class ArmControl {
 			leftTalon.setPosition(0.0);
 		} else 
 			leftTalon.set(-baseSpeed);
-
+		
+		if (rightDone && leftDone) startRumble(LEFT);
 		return rightDone && leftDone;
 	}
 
