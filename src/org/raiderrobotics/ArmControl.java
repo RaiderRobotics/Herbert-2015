@@ -335,7 +335,7 @@ public class ArmControl {
 		// than move at a speed between maximum and 0.15
 
 		//if you are in the slowdown region then ...
-		if(absR < baseSpeed * SLOWDOWN_REGION) {	//not that slowDown is being scaled by mutiplying it by speed.
+		if(absR < baseSpeed * SLOWDOWN_REGION) {	//note that slowDown is being scaled by mutiplying it by speed.
 			double slowDownSpeed = distR / SLOWDOWN_REGION;	//calculate the slowdown speed
 			speedR *= Math.max(slowDownSpeed, 0.15); //do not permit a slowDown speed to be less than 0.15
 			//WAS: //speedR *= (slowDownSpeed < 0.15 ? 0.15 : slowDownSpeed);
@@ -448,9 +448,9 @@ public class ArmControl {
 		}else{ //stop
 			xbox.setRumble(Joystick.RumbleType.kRightRumble, 0.0f);
 			return true;
-		}
-		
+		}	
 	}
+	
 	private boolean isLeftRumbleDone(){
 		if(leftRumbleCount>0){
 			leftRumbleCount--;
