@@ -14,8 +14,10 @@ public class CircularOperation {
 			return 4;
 		}else if(angle >= 180 && angle < 270){
 			return 3;
-		}else{
+		}else if(angle >= 270 && angle < 360){
 			return 2;
+		}else{
+			return 0;
 		}
 		
 	}

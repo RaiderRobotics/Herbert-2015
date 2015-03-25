@@ -1,5 +1,7 @@
 package org.raiderrobotics;
 
+import org.raiderrobotics.utils.CircularOperation;
+
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Gyro;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -8,12 +10,16 @@ import static org.raiderrobotics.RobotMap.*;
 public class DriveTrainGyro extends Gyro {
 	private boolean isTurning = false;
 	private double targetAngle = 0.0;
+	
+	RobotDrive driveTrain;
+	
 
 	//TODO: this should probably be fixed so that you can never make a second MyGyro and have two of them trying to control the same drive train.
 	//make it a singleton method
 	DriveTrainGyro(RobotDrive driveTrain, int channel) {
 		super(channel);
 		this.setSensitivity(GYRO_SENSITIVITY);
+		this.driveTrain = driveTrain;
 	}
 
 	DriveTrainGyro(RobotDrive driveTrain, AnalogInput channel) {
@@ -26,6 +32,16 @@ public class DriveTrainGyro extends Gyro {
 		 isTurning = true;
 		 targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
 		 */
+		isTurning = true;
+		
+		if(CircularOperation.getQuadrant(this.getAngle()) == 1 || CircularOperation.getQuadrant(this.getAngle()) == 4){
+			targetAngle = 90;
+		}
+		else if(CircularOperation.getQuadrant(this.getAngle()) == 2 || CircularOperation.getQuadrant(this.getAngle()) == 3){
+			targetAngle = 270;
+		}
+		continueTurning();
+		
 	}
 
 	void orientYAxis() {
@@ -34,16 +50,29 @@ public class DriveTrainGyro extends Gyro {
 		isTurning = true;
 		targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
 		 */
+
+		isTurning = true;
+		
+		if(CircularOperation.getQuadrant(this.getAngle()) == 1 || CircularOperation.getQuadrant(this.getAngle()) == 3){
+			targetAngle = 0;
+		}
+		else if(CircularOperation.getQuadrant(this.getAngle()) == 2 || CircularOperation.getQuadrant(this.getAngle()) == 4){
+			targetAngle = 180;
+		}
+		
+		continueTurning();
 	}
 
 	void turnPlus45() {
 		isTurning = true;
-		targetAngle = this.getAngle() + 45.0;		
+		targetAngle = this.getAngle() + 45.0;	
+		continueTurning();
 	}
 
 	void turnMinus45() {
 		isTurning = true;
 		targetAngle = this.getAngle() - 45.0;
+		continueTurning();
 	}
 
 	void cancelTurning() {
@@ -58,6 +87,25 @@ public class DriveTrainGyro extends Gyro {
 
 		//2. check if desired angle is reached
 		//if so, set isTurning = false;
+		
+		if(!isTurning){ //cancelled 
+			return;
+		}
+		
+		double currentAngle = this.getAngle();
+    	double offset = CircularOperation.offsetCostume(currentAngle, targetAngle);
+    	//turnSpeed = (-joystick.getThrottle() + 1) / 2; //The throttle goes from -1 to 1, so we need to make it go from 0 to 1
+    	
+    	if(Math.abs(offset) < 1){
+    		driveTrain.drive(0, 0);
+    		isTurning = false; 
+    	}else{
+    		 if(offset > 0){
+    			 driveTrain.drive(-1*0.5, 1); //turn right (aka clockwise)
+    		 }else{
+    			 driveTrain.drive(1*0.5, 1); //turn left (aka counter clockwise)
+    		 }
+    	}
 
 	}
 
