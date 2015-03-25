@@ -130,8 +130,13 @@ public class Robot extends IterativeRobot {
 			//driveTrain1.arcadeDrive(y2max, x2max, true); //use squared inputs
 			driveTrain1.arcadeDrive(y2max, x2max, false); //NO squared inputs
 		} else {
-			double x2norm = xbox360drive.getX() * (NORMSPEED / 100.0);
-			double y2norm = xbox360drive.getY() * (NORMSPEED / 100.0);
+			double x2norm = xbox360drive.getX() * (NORMSPEED / 100.0) - 0.05;
+			double y2norm = (xbox360drive.getY() -0.01) * (NORMSPEED / 100.0) - 0.05;
+			
+			/*****************************************************************
+			 * For the real 2015 robot, the line should look like this:
+			 * double y2norm = xbox360drive.getY() * (NORMSPEED / 100.0) - 0.05;
+			 *****************************************************************/
 			//driveTrain1.arcadeDrive(y2norm, x2norm, true);
 			driveTrain1.arcadeDrive(y2norm, x2norm, false);
 		}
