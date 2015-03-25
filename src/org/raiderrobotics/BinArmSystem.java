@@ -25,12 +25,20 @@ public class BinArmSystem {
 		if(!limitSwitch.get()){
 			//up and down have different speeds because of gravity
 			pulleyPower = xbox.getRawAxis(XBOX_L_YAXIS);
+			
 			if(pulleyPower<0.0){ //going up
 				talonPulley.set(pulleyPower*-0.5);
-			}else{
+			}
+			else if(pulleyPower>0.0){
 				talonPulley.set(pulleyPower*-0.3); //going down
 			}
-
+			else{
+				if(xbox.getRawButton(XBOX_BTN_BACK)){
+					talonPulley.set(0.05);//maintain power
+				}else{
+					talonPulley.set(0.0);
+				}
+			}
 		}else{ // bin motor has hit switch at top
 			talonPulley.set(-0.2);	//maintain 20% power.
 			//armControl.stop();  //this does not work for all cases reliably
