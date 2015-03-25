@@ -31,13 +31,13 @@ public class ArmControl {
 //	static final double POS_TOP = 6500.0;
 //	static final double POS_MIDDLE = 4000.0;
 	//for ROBOT #2
-	static final double POS_TOP = 8000.0;
-	static final double POS_MIDDLE = 5000.0;
+	static final double POS_TOP = 4100.0;   // was 8000.0
+	static final double POS_MIDDLE = 2300.0;   //was 5000.0
 	
 	static final double ARMSPEED = 1.0; // was 0.8;
-	static final double SLOWDOWN_REGION = 500.0;
+	static final double SLOWDOWN_REGION = 250.0; //was 500
 	static final double LSPEED_MULT = 1.00;
-	static final double RSPEED_MULT = 1.00;  //for robot #2 only
+	static final double RSPEED_MULT = 0.96;  //for robot #2 only
 	//static final double RSPEED_MULT = 0.93;	//the right motor is a bit faster than the left, so slow it down. 
 		//tried 0.90 and 0.95
 	
