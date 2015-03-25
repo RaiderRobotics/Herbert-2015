@@ -209,7 +209,7 @@ public class ArmControl {
 		//Emergency stop button
 		if (xbox.getRawButton(XBOX_BTN_X)) {
 			armMode = Mode.STOP;
-			startRumble(RIGHT);
+			startRumble(LEFT);
 		}
 
 		//Move to rest button
@@ -374,9 +374,6 @@ public class ArmControl {
 				leftTalon.set(speedL);
 		}
 		
-		if(rightSwitch.get()){
-			startRumble(LEFT);
-		}
 	}
 
 	boolean moveToRest(){
@@ -388,6 +385,7 @@ public class ArmControl {
 			rightDone = true;
 			rightTalon.set(0.0);
 			rightTalon.setPosition(0.0);
+			startRumble(LEFT);
 		} else 
 			rightTalon.set(-baseSpeed);
 
@@ -398,7 +396,6 @@ public class ArmControl {
 			leftTalon.setPosition(0.0);
 		} else 
 			leftTalon.set(-baseSpeed);
-
 
 		return rightDone && leftDone;
 	}
@@ -424,7 +421,7 @@ public class ArmControl {
 		rumbleCounter = 50;
 	}
 */
-	private void startRumble(int side){//side 1 is right, 2 is left
+	private void startRumble(int side){
 		
 		if(side == RIGHT){
 			if(rightRumbleCount == 0){
