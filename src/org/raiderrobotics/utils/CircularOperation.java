@@ -8,14 +8,14 @@ public class CircularOperation {
 	
 	public static int getQuadrant(double angle){ 
 		angle = getFundimentalAngle(angle);
-		if(angle >= 0 && angle < 90){
+		if(angle >= 270 && angle < 360){
 			return 1;
-		}else if(angle >= 90 && angle < 180){
-			return 4;
-		}else if(angle >= 180 && angle < 270){
-			return 3;
-		}else if(angle >= 270 && angle < 360){
+		}else if(angle >= 0 && angle < 90){
 			return 2;
+		}else if(angle >= 90 && angle < 180){
+			return 3;
+		}else if(angle >= 180 && angle < 270){
+			return 4;
 		}else{
 			return 0;
 		}

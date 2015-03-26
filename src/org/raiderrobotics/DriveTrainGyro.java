@@ -32,16 +32,25 @@ public class DriveTrainGyro extends Gyro {
 		 isTurning = true;
 		 targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
 		 */
+		double currentAngle = this.getAngle();
 		isTurning = true;
 		
-		if(CircularOperation.getQuadrant(this.getAngle()) == 1 || CircularOperation.getQuadrant(this.getAngle()) == 4){
-			targetAngle = 90;
-		}
-		else if(CircularOperation.getQuadrant(this.getAngle()) == 2 || CircularOperation.getQuadrant(this.getAngle()) == 3){
+		//if in Quadrant 1 or 3 
+		if(CircularOperation.getQuadrant(currentAngle) == 1 || CircularOperation.getQuadrant(currentAngle) == 4){
 			targetAngle = 270;
 		}
+		else if(CircularOperation.getQuadrant(currentAngle) == 2 || CircularOperation.getQuadrant(currentAngle) == 3){
+			targetAngle = 90;
+		}else{
+			if(currentAngle == 270){
+				targetAngle = 90;
+			}else if(currentAngle == 90){
+				targetAngle = 270;
+			}else{
+				isTurning = false;
+			}
+		}
 		continueTurning();
-		
 	}
 
 	void orientYAxis() {
@@ -50,14 +59,23 @@ public class DriveTrainGyro extends Gyro {
 		isTurning = true;
 		targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
 		 */
-
+		double currentAngle = this.getAngle();
 		isTurning = true;
 		
-		if(CircularOperation.getQuadrant(this.getAngle()) == 1 || CircularOperation.getQuadrant(this.getAngle()) == 3){
+		//if in Quadrant 1 or 3 
+		if(CircularOperation.getQuadrant(currentAngle) == 1 || CircularOperation.getQuadrant(currentAngle) == 2){
 			targetAngle = 0;
 		}
-		else if(CircularOperation.getQuadrant(this.getAngle()) == 2 || CircularOperation.getQuadrant(this.getAngle()) == 4){
+		else if(CircularOperation.getQuadrant(currentAngle) == 3 || CircularOperation.getQuadrant(currentAngle) == 4){
 			targetAngle = 180;
+		}else{
+			if(currentAngle == 0){
+				targetAngle = 180;
+			}else if(currentAngle == 180){
+				targetAngle = 0;
+			}else{
+				isTurning = false;
+			}
 		}
 		
 		continueTurning();
