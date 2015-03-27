@@ -114,7 +114,7 @@ public class DriveTrainGyro extends Gyro {
     	double offset = CircularOperation.offsetCostume(currentAngle, targetAngle);
     	//turnSpeed = (-joystick.getThrottle() + 1) / 2; //The throttle goes from -1 to 1, so we need to make it go from 0 to 1
     	
-    	if(Math.abs(offset) < 1){
+    	if(Math.abs(offset) < 5){
     		driveTrain.drive(0, 0);
     		isTurning = false; 
     	}else{

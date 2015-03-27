@@ -121,19 +121,18 @@ public class Robot extends IterativeRobot {
 		double stickX = xbox360drive.getRawAxis(XBOX_L_XAXIS); 
 		double stickY = xbox360drive.getRawAxis(XBOX_L_YAXIS) - 0.01; 
 		double stickMove = stickX * stickX + stickY * stickY;
-		 
-		if (stickMove > 0.05) gyro1.cancelTurning();
 		
+		if (stickMove > 0.05) gyro1.cancelTurning();
 		
 		if (xbox360drive.getRawButton(XBOX_BUMPER_R)) {//high speed mode
 //			double x2max = xbox360drive.getX() * (MAXSPEED / 100.0) - 0.05;
 //			double y2max = (xbox360drive.getY() - 0.01) * (MAXSPEED / 100.0) - 0.05;
-			double x2max = stickX * (MAXSPEED / 100.0) + Math.signum(stickX)*0.05;
+			double x2max = stickX * (MAXSPEED / 100.0); //Do not amplify X motions: + Math.signum(stickX)*0.05;
 			double y2max = stickY * (MAXSPEED / 100.0) + Math.signum(stickY)*0.05;
 			driveTrain1.arcadeDrive(y2max, x2max, false); //use squared inputs. Herbert#2: set to false
 		} else {
 				
-			double x2norm = stickX * (NORMSPEED / 100.0) + Math.signum(stickX)*0.05;
+			double x2norm = stickX * (NORMSPEED / 100.0); // + Math.signum(stickX)*0.05;
 			double y2norm = stickY * (NORMSPEED / 100.0) + Math.signum(stickY)*0.05;
 			driveTrain1.arcadeDrive(y2norm, x2norm, false);
 		}

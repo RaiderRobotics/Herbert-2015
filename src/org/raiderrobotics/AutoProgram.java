@@ -13,6 +13,7 @@ public class AutoProgram {
 	int programUsed = AUTO_TOTE; //default
 	ArmControl armControl;
 	boolean inAutoZone = false;
+	double startingAngle = 0.0;
 
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
@@ -32,6 +33,8 @@ public class AutoProgram {
 	void init(){
 		inAutoZone = false;
 		distEncoder.reset();
+		gyro.reset();
+		startingAngle = gyro.getAngle();
 	}
 
 	void setProgram(int program) {
@@ -53,41 +56,60 @@ public class AutoProgram {
 	}
 	
 	void autoTote(){
-		armControl.armMode=armControl.armMode.MOVE_TO_REST;
-		armControl.tick();
-		tenKProgram();
+		//armControl.armMode=armControl.armMode.MOVE_TO_REST;
+		//armControl.tick();
+		autoMove();
 	}
 
 	void autoRecycle(){
-		armControl.armMode=armControl.armMode.MOVE_TO_MIDDLE;
-		armControl.tick();
+		//armControl.armMode=armControl.armMode.MOVE_TO_MIDDLE;
+		//armControl.tick();
 		autoMove();
 	}
 	
 	void autoMove(){
-		double currentAngle = gyro.getAngle()%360;
-		double offset = CircularOperation.offsetZero(currentAngle);
+		//drive straight.
+		double Kp = 0.5; //0.3 works. Possibly a higher value
+         
+		double currentAngle = gyro.getAngle();
+//		double offset = CircularOperation.offsetZero(currentAngle);
 		double rightMotorFactor, leftMotorFactor;
 		
-		if(offset > 0){
-			leftMotorFactor = 1;
-			rightMotorFactor = 1.2;
-		}else{
-			leftMotorFactor = 1.2;
-			rightMotorFactor = 1;
+		
+		// the correction should be based on the size of the error
+		//the left motor is not as powerful as the right
+		if(currentAngle > startingAngle){
+			leftMotorFactor = 1.6 + (currentAngle - startingAngle) * Kp;
+			rightMotorFactor = 1.4;
+		} else if (currentAngle < startingAngle) {
+			leftMotorFactor = 1.6;
+			rightMotorFactor = 1.4 + (currentAngle - startingAngle) * Kp;
+		} else {
+			leftMotorFactor = 1.4;
+			rightMotorFactor = 1.4;
 		}
+	
+
+//		leftMotorFactor = 1.5 - (currentAngle - startingAngle) * Kp;
+//		rightMotorFactor = 1.0;
+		
+		System.out.println("diff: " + (currentAngle - startingAngle) + "\tS=" + startingAngle + " \tC=" + currentAngle);
+		//System.out.println("Corr: " + (currentAngle - startingAngle) * Kp);
 		
 		if(! inAutoZone){
-			if(distEncoder.getDistance() < AUTO_ZONE_DISTANCE){
-				rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
-				rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
+			if(distEncoder.getDistance() > AUTO_ZONE_DISTANCE){
+				//rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
+				//rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
+				rampToSpeed(talon1, AUTO_SPEED_FWD * 1.0);
+				rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * 0.8);
+				
 			}else{
 				inAutoZone = true;
 				distEncoder.reset();
 				talon1.stopMotor();
 				talon2.stopMotor();
 			}	
-		}else{
+/*		}else{
 			if(distEncoder.getDistance() > AUTO_BACKUP_DISTANCE){
 				talon1.set(-1 * AUTO_SPEED_BCK * leftMotorFactor);
 				talon2.set(AUTO_SPEED_BCK * rightMotorFactor); 
@@ -95,7 +117,7 @@ public class AutoProgram {
 				talon1.stopMotor();
 				talon2.stopMotor();	
 			}
-		}
+*/		}
 	}
 	
 	void tenKProgram(){
@@ -104,13 +126,13 @@ public class AutoProgram {
 		double rightMotorFactor, leftMotorFactor;
 		
 		if(offset > 0){
-			leftMotorFactor = 1;
+			leftMotorFactor = 0.8;
 			rightMotorFactor = 1.2;
 		}else{
 			leftMotorFactor = 1.2;
-			rightMotorFactor = 1;
+			rightMotorFactor = 0.8;
 		}
-		if(distEncoder.getDistance() < 100){
+		if(distEncoder.getDistance() > -1000){
 			rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
 			rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
 		}else{
