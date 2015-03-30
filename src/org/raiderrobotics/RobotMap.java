@@ -15,7 +15,7 @@ public final class RobotMap {
 	/* FINAL constants */
 	//final static int ARCADE = 1;
 	//final static int TANK = 2;
-	final static int NORMSPEED = 80;	//% speed of normal driving
+	final static int NORMSPEED = 75;	//% speed of normal driving
 	final static int MAXSPEED = 100;	
 	
 	/* joysticks and buttons */
@@ -78,10 +78,10 @@ public final class RobotMap {
 
 	final static double AUTO_ZONE_DISTANCE = 3000.0;
 	final static double AUTO_BACKUP_DISTANCE = -500.0;
-	final static double AUTO_SPEED_FWD = 0.8;
+	final static double AUTO_SPEED_FWD = 1.0;
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
 	
-	final static double TALONRAMPINCREMENT = 0.05; 
+	final static double TALONRAMPINCREMENT = 0.1; 
 	/* NOTE: make a separate constant if you are using the multiply method for ramping the Talons. 
 	 * This is designed and intended for the addition method.
 	 * Do NOT set this to 1.1 . Make a new constant.
