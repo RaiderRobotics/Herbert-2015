@@ -27,22 +27,26 @@ public class ArmControl {
 	DigitalInput rightSwitch;
 	DigitalInput leftSwitch;
 
+	Joystick xbox;
+
 	//(these numbers are also stored in a config file on the roboRIO
-	static final double POS_TOP = 6500.0;
-	static final double POS_MIDDLE = 4000.0;
-	static final double ARMSPEED = 1.0; // was 0.8;
-	static final double SLOWDOWN_REGION = 500.0;
+	static final double POS_TOP = 4200.0; 		//6500.0;
+	static final double POS_MIDDLE = 2300.0; 	//4000.0;
+	static final double ARMSPEED = 1.0; 		// was 0.8;
+	static final double SLOWDOWN_REGION = 250.0; 	//500.0;
 	static final double LSPEED_MULT = 1.00;
 	static final double RSPEED_MULT = 0.93;	//the right motor is a bit faster than the left, so slow it down. 
 		//tried 0.90 and 0.95
+	static final int RIGHT=1, LEFT=2;		//used for rumble
 	
+	int rightRumbleCount = 0;
+	int leftRumbleCount = 0;
 	//this is the base speed that the arms move at.
 	//It can is often set to the contant ARMSPEED but then changed to 0.5
 	//It is used as a starting point to calculate the slowdown speed.
 	double baseSpeed = 0.5; 
 
-	Joystick xbox;
-
+	
 	//Different control modes. To use from within a different class
 	public enum Mode{
 		STOP,
@@ -142,6 +146,8 @@ public class ArmControl {
 	 * Must be called periodically (usually in teleopPeriodic()).
 	 */
 	public void tick() {
+		isRightRumbleDone();
+		isLeftRumbleDone();
 		
 		//******* Manual Drive Section *******//
 		//Check for manual drive
@@ -164,15 +170,17 @@ public class ArmControl {
 			if((move < 0 && !rightSwitch.get())
 					|| (move > 0.0 && getRightEncPos() <= POS_TOP)) //Check bottom and top limits
 				rightTalon.set(move * right);
-			else
+			else {
 				rightTalon.set(0.0);
-
+			}
+			
 			if((move < 0 && !leftSwitch.get())
 					|| (move > 0.0 && getLeftEncPos() <= POS_TOP)) //Check bottom and stop limits
 				leftTalon.set(move * left);
-			else
+			else {
 				leftTalon.set(0.0);
-
+			}
+			
 			return;
 		} 
 		//********  End manual arm movement section  *******//
@@ -182,6 +190,7 @@ public class ArmControl {
 		//Emergency stop button
 		if (xbox.getRawButton(XBOX_BTN_X)) {
 			armMode = Mode.STOP;
+			startRumble(LEFT);
 		}
 
 		//Move to rest button
@@ -304,7 +313,7 @@ public class ArmControl {
 		// than move at a speed between maximum and 0.15
 
 		//if you are in the slowdown region then ...
-		if(absR < baseSpeed * SLOWDOWN_REGION) {	//not that slowDown is being scaled by mutiplying it by speed.
+		if(absR < baseSpeed * SLOWDOWN_REGION) {	//note that slowDown is being scaled by mutiplying it by speed.
 			double slowDownSpeed = distR / SLOWDOWN_REGION;	//calculate the slowdown speed
 			speedR *= Math.max(slowDownSpeed, 0.15); //do not permit a slowDown speed to be less than 0.15
 			//WAS: //speedR *= (slowDownSpeed < 0.15 ? 0.15 : slowDownSpeed);
@@ -364,7 +373,7 @@ public class ArmControl {
 		} else 
 			leftTalon.set(-baseSpeed);
 
-
+		if (rightDone && leftDone) startRumble(LEFT);
 		return rightDone && leftDone;
 	}
 
@@ -380,6 +389,42 @@ public class ArmControl {
 		return armMode;
 	}
 
+	private void startRumble(int side){
+		if(side == RIGHT){
+			if(rightRumbleCount == 0){
+				rightRumbleCount = 1;
+			}
+			xbox.setRumble(Joystick.RumbleType.kRightRumble, 1.0f);
+			//isRightRumbleDone();
+		}else{
+			if(leftRumbleCount == 0){
+				leftRumbleCount = 1;
+			}
+			xbox.setRumble(Joystick.RumbleType.kLeftRumble, 1.0f);
+		}
+	}
+	
+	private boolean isRightRumbleDone(){ 
+		if(rightRumbleCount>0){
+			//xbox.setRumble(Joystick.RumbleType.kRightRumble, 1.0f);
+			rightRumbleCount--;
+			return false;
+		}else{ //stop
+			xbox.setRumble(Joystick.RumbleType.kRightRumble, 0.0f);
+			return true;
+		}	
+	}
+	
+	private boolean isLeftRumbleDone(){
+		if(leftRumbleCount>0){
+			leftRumbleCount--;
+			return false;
+		}else{ //stop
+			xbox.setRumble(Joystick.RumbleType.kLeftRumble, 0.0f);
+			return true;
+		}
+	}
+	
 	//For some reason inverting the sensor input doesn't work with the talons.
 	//So we need to invert it manually
 	public int getRightEncPos() {
