@@ -92,7 +92,7 @@ public class AutoProgram {
 		//System.out.println("Corr: " + (currentAngle - startingAngle) * Kp);
 		
 		if(! inAutoZone){
-			if(distEncoder.getDistance() > AUTO_ZONE_DISTANCE){
+			if(distEncoder.getDistance() < AUTO_ZONE_DISTANCE){
 				//rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
 				//rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
 				rampToSpeed(talon1, AUTO_SPEED_FWD * 1.0);
