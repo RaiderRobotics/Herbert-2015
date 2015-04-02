@@ -33,7 +33,7 @@ public class ArmControl {
 	static final double POS_TOP = 6500.0;
 	static final double POS_MIDDLE = 4000.0;
 	static final double ARMSPEED = 1.0; 		// was 0.8;
-	static final double SLOWDOWN_REGION = 500.0; 	//500.0;
+	static final double SLOWDOWN_REGION = 500.0;
 	static final double LSPEED_MULT = 1.00;
 	static final double RSPEED_MULT = 1.00;	//the right motor is a bit faster than the left, so slow it down. 
 		//tried 0.90 and 0.95
