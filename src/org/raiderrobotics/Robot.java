@@ -25,7 +25,7 @@ public class Robot extends IterativeRobot {
 	AutoProgram autoProgram;
 	int cameraSession;
 	Image imageFrame;
-	
+
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
 		talon2 = new Talon(TALON_2_PORT);
@@ -44,29 +44,29 @@ public class Robot extends IterativeRobot {
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kRearRight,true);
 
 		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
-		
+
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-        	armControl = ArmControl.setupInstance(xbox360arm);
+		armControl = ArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
-		
+
 		//make an ArmControl instance in BinArmSystem in order to access armControl
 		binArmSystem = new BinArmSystem(xbox360arm);
-		
-        	encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
+
+		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023
 		encodeDriveL.reset();
-		
+
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL, gyro1);
 		autoProgram.setProgram(AUTO_RECYCLE);
-		
+
 		setUpSmartDashboard();
 		setUpCamera();
 	}
 
 	public void disabledInit() {
-        	armControl.reset();
+		armControl.reset();
 		talon1.stopMotor();
 		talon2.stopMotor();		
 		NIVision.IMAQdxStopAcquisition(cameraSession);
@@ -84,6 +84,7 @@ public class Robot extends IterativeRobot {
 
 	public void teleopInit() {
 		NIVision.IMAQdxStartAcquisition(cameraSession);
+		binArmSystem.stopRotation();	//this might still be rotating from autonomous mode
 	}
 
 	/* This method contains all buttons and joysticks.
@@ -92,7 +93,8 @@ public class Robot extends IterativeRobot {
 	 * 	If the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
 	 */
 	public void teleopPeriodic() {
-		
+
+/*		
 		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
@@ -100,16 +102,17 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
-        
-        	normalDrive();
-
-        	armControl.tick();
-        
-        	binArmSystem.tick();
-
-        	if (gyro1.isTurning()) gyro1.continueTurning();
+*/
 		
- 		//update camera image
+		normalDrive();
+
+		armControl.tick();
+
+		binArmSystem.tick();
+
+//		if (gyro1.isTurning()) gyro1.continueTurning();
+
+		//update camera image
 		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
 		//NIVision.imaqDrawShapeOnImage(imageFrame, imageFrame, new NIVision.Rect(10, 10, 100, 100) , DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
 		CameraServer.getInstance().setImage(imageFrame);
@@ -125,13 +128,13 @@ public class Robot extends IterativeRobot {
 		if (stickMove > 0.05) gyro1.cancelTurning();
 
 		if (xbox360drive.getRawButton(XBOX_BUMPER_R)) {//high speed mode
-//			double x2max = xbox360drive.getX() * (MAXSPEED / 100.0) - 0.05;
-//			double y2max = (xbox360drive.getY() - 0.01) * (MAXSPEED / 100.0) - 0.05;
+			//			double x2max = xbox360drive.getX() * (MAXSPEED / 100.0) - 0.05;
+			//			double y2max = (xbox360drive.getY() - 0.01) * (MAXSPEED / 100.0) - 0.05;
 			double x2max = stickX * (MAXSPEED / 100.0); //Do not amplify X motions: + Math.signum(stickX)*0.05;
 			double y2max = stickY * (MAXSPEED / 100.0) + Math.signum(stickY)*0.05;
 			driveTrain1.arcadeDrive(y2max, x2max, false); //use squared inputs. Herbert#2: set to false
 		} else {
-				
+
 			double x2norm = stickX * (NORMSPEED / 100.0); // + Math.signum(stickX)*0.05;
 			double y2norm = stickY * (NORMSPEED / 100.0) + Math.signum(stickY)*0.05;
 			driveTrain1.arcadeDrive(y2norm, x2norm, false);

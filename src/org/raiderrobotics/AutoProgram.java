@@ -12,6 +12,8 @@ public class AutoProgram {
 	int programUsed = AUTO_TOTE; //default
 	boolean inAutoZone = false;
 	double startingAngle = 0.0;
+	long startTime = 0;
+	CANTalon talonTwister; //create this again here. It is also in BinArmSystem.
 	
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
@@ -24,6 +26,7 @@ public class AutoProgram {
 		gyro = gyroInput;
 		gyro.reset();
 		gyro.setSensitivity(0.007);
+		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
 	}
 
 	void init(){
@@ -31,6 +34,7 @@ public class AutoProgram {
 		distEncoder.reset();
 		gyro.reset();
 		startingAngle = gyro.getAngle();
+		startTime = System.currentTimeMillis();
 	}
 
 	void setProgram(int program) {
@@ -62,18 +66,18 @@ public class AutoProgram {
 		autoMove();
 	}
 	
+	/* Drive Straight */
 	void autoMove(){
-		//drive straight.
-		double Kp = 0.5; //0.3 works. Possibly a higher value
-         
+		
+		double Kp = 0.5; //0.3 works. Possibly a higher value 
 		double currentAngle = gyro.getAngle();
 //		double offset = CircularOperation.offsetZero(currentAngle);
 		double rightMotorFactor, leftMotorFactor;
 		
-		
+		/* use Gyro to drive straight. WOW This is NOT being used! */
 		// the correction should be based on the size of the error
 		//the left motor is not as powerful as the right
-		if(currentAngle > startingAngle){
+/*		if(currentAngle > startingAngle){
 			leftMotorFactor = 1.6 + (currentAngle - startingAngle) * Kp;
 			rightMotorFactor = 1.4;
 		} else if (currentAngle < startingAngle) {
@@ -83,14 +87,10 @@ public class AutoProgram {
 			leftMotorFactor = 1.4;
 			rightMotorFactor = 1.4;
 		}
-	
-
-//		leftMotorFactor = 1.5 - (currentAngle - startingAngle) * Kp;
-//		rightMotorFactor = 1.0;
+*/
 		
-		System.out.println("diff: " + (currentAngle - startingAngle) + "\tS=" + startingAngle + " \tC=" + currentAngle);
-		//System.out.println("Corr: " + (currentAngle - startingAngle) * Kp);
-		
+		/* use encoder to determine location of robot; when to stop */
+		//TODO: the two speed factors have jsut been set to 1 and 0.8 by trial and error.
 		if(! inAutoZone){
 			if(distEncoder.getDistance() < AUTO_ZONE_DISTANCE){
 				//rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
@@ -113,6 +113,11 @@ public class AutoProgram {
 				talon2.stopMotor();	
 			}
 */		}
+		
+		//start the bin motor after WAITTIME
+		if (System.currentTimeMillis() - startTime > AUTO_WAITTIME) {
+			talonTwister.set(0.8);
+		}
 	}
 
 /*	

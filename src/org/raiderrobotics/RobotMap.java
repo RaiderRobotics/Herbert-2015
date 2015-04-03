@@ -80,6 +80,7 @@ public final class RobotMap {
 	final static double AUTO_BACKUP_DISTANCE = -500.0;
 	final static double AUTO_SPEED_FWD = 1.0;
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
+	final static long AUTO_WAITTIME = 12000;  //12 seconds in milliseconds. Time to wait before starting Bin rotation 
 	
 	final static double TALONRAMPINCREMENT = 0.1; 
 	/* NOTE: make a separate constant if you are using the multiply method for ramping the Talons. 

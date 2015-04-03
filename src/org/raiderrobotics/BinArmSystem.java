@@ -65,4 +65,8 @@ public class BinArmSystem {
 		talonTwister.set(xbox.getRawAxis(XBOX_R_XAXIS));
 		
 	}
+	
+	void stopRotation() {
+		talonTwister.set(0);
+	}
 }
