@@ -43,7 +43,7 @@ public class Robot extends IterativeRobot {
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kFrontRight,true);
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kRearRight,true);
 
-		//gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
+		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
 
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
