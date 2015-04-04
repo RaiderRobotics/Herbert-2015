@@ -23,8 +23,8 @@ public class Robot extends IterativeRobot {
 	ArmControl armControl;
 	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
-	int cameraSession;
-	Image imageFrame;
+//	int cameraSession;
+//	Image imageFrame;
 
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
@@ -43,7 +43,7 @@ public class Robot extends IterativeRobot {
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kFrontRight,true);
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kRearRight,true);
 
-		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
+		//gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
 
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
@@ -61,15 +61,13 @@ public class Robot extends IterativeRobot {
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL, gyro1);
 		autoProgram.setProgram(AUTO_RECYCLE);
 
-		setUpSmartDashboard();
-		setUpCamera();
+		//setUpSmartDashboard();
 	}
 
 	public void disabledInit() {
 		armControl.reset();
 		talon1.stopMotor();
 		talon2.stopMotor();		
-		NIVision.IMAQdxStopAcquisition(cameraSession);
 	}
 
 	public void autonomousInit() {
@@ -83,7 +81,6 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
-		NIVision.IMAQdxStartAcquisition(cameraSession);
 		binArmSystem.stopRotation();	//this might still be rotating from autonomous mode
 	}
 
@@ -111,11 +108,6 @@ public class Robot extends IterativeRobot {
 		binArmSystem.tick();
 
 //		if (gyro1.isTurning()) gyro1.continueTurning();
-
-		//update camera image
-		NIVision.IMAQdxGrab(cameraSession, imageFrame, 1);
-		//NIVision.imaqDrawShapeOnImage(imageFrame, imageFrame, new NIVision.Rect(10, 10, 100, 100) , DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
-		CameraServer.getInstance().setImage(imageFrame);
 	}
 
 	// Drive the robot normally, apply speed boost if needed
@@ -172,13 +164,6 @@ public class Robot extends IterativeRobot {
 		chooser1.addObject("Option 1", "y");
 		chooser1.addObject("Option 2", "z");
 		SmartDashboard.putData("Chooser", chooser1);
-	}
-
-	void setUpCamera() {
-		imageFrame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
-		// the camera name (ex "cam0") can be found through the roborio web interface
-		cameraSession = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
-		NIVision.IMAQdxConfigureGrab(cameraSession);
 	}
 
 }
