@@ -30,7 +30,7 @@ public class ArmControl {
 	Joystick xbox;
 
 	//(these numbers are also stored in a config file on the roboRIO
-	static final double POS_TOP = 6500.0;
+	static final double POS_TOP = 5000.0;
 	static final double POS_MIDDLE = 4000.0;
 	static final double ARMSPEED = 1.0; 		// was 0.8;
 	static final double SLOWDOWN_REGION = 500.0;
@@ -100,7 +100,7 @@ public class ArmControl {
 		//leftTalon.setVoltageRampRate(RAMPRATE);
 
 		rightTalon.set(0.0);
-		rightTalon.changeControlMode(ControlMode.PercentVbus);
+		rightTalon.changeControlMode(ControlMode.Follower);
 		rightTalon.enableControl();
 		//TODO: test this
 		//rightTalon.setVoltageRampRate(RAMPRATE);
@@ -157,29 +157,27 @@ public class ArmControl {
 
 			//Percentage at what the talons will move
 			//when one is going faster than the other one
-			double rightCut = 0.95;
-			double leftCut = 0.95;
 
-			//Determining if one talon is moving faster than the other one
-			double right = Math.abs(getRightEncPos()) > Math.abs(getLeftEncPos())
-					? rightCut : 1.0;
-			double left = Math.abs(getLeftEncPos()) > Math.abs(getRightEncPos())
-					? leftCut : 1.0;
 
 			//Move the talons based on their determined speeds
-			if((move < 0 && !rightSwitch.get())
-					|| (move > 0.0 && getRightEncPos() <= POS_TOP)) //Check bottom and top limits
-				rightTalon.set(move * right);
-			else {
+			
+			if((move < 0 && (!leftSwitch.get() || !rightSwitch.get()))
+					|| (move > 0.0 && getLeftEncPos() <= POS_TOP)){ //Check bottom and stop limits
+				leftTalon.set(move);
+				rightTalon.set(leftTalon.getDeviceID());
+			}
+			else if(move < 0 && (rightSwitch.get() && !leftSwitch.get())){
+				leftTalon.set(move);
+				rightTalon.set(0.0);
+			}else if(move < 0 && (!rightSwitch.get() && leftSwitch.get())){
+				leftTalon.set(0.0);
+				rightTalon.set(move);
+			}else{
+				leftTalon.set(0.0);
 				rightTalon.set(0.0);
 			}
+		
 			
-			if((move < 0 && !leftSwitch.get())
-					|| (move > 0.0 && getLeftEncPos() <= POS_TOP)) //Check bottom and stop limits
-				leftTalon.set(move * left);
-			else {
-				leftTalon.set(0.0);
-			}
 			
 			return;
 		} 
@@ -339,7 +337,7 @@ public class ArmControl {
 				rightDoneMoving = true;
 				rightTalon.set(0.0);
 			} else
-				rightTalon.set(speedR);
+				rightTalon.set(leftTalon.getDeviceID());
 		}
 
 		//Move left
@@ -362,15 +360,19 @@ public class ArmControl {
 			rightDone = true;
 			rightTalon.set(0.0);
 			rightTalon.setPosition(0.0);
-		} else 
+		} else if(leftSwitch.get()){
 			rightTalon.set(-baseSpeed);
+		}else{
+			rightTalon.set(leftTalon.getDeviceID());
+		}
 
 		//Move left to bottom
 		if(leftSwitch.get()){
 			leftDone = true;
 			leftTalon.set(0.0);
 			leftTalon.setPosition(0.0);
-		} else 
+		} 
+		else 
 			leftTalon.set(-baseSpeed);
 
 		if (rightDone && leftDone) startRumble(LEFT);
