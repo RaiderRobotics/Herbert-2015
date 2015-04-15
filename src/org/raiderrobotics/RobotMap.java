@@ -88,5 +88,10 @@ public final class RobotMap {
 	 * Do NOT set this to 1.1 . Make a new constant.
 	 */
 
+	/*** location of HAll effect sensor ports */ 
+	final static int HALL_L_MID_PORT = 10;
+	final static int HALL_R_MID_PORT = 11;
+	final static int HALL_L_TOP_PORT = 12;
+	final static int HALL_R_TOP_PORT = 13;
 	
 }
