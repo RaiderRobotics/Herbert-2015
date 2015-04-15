@@ -63,7 +63,7 @@ public final class RobotMap {
 	final static int GYRO1_PORT = 0;
 	final static int LEFT_ARM_SWITCH_PORT = 4;	//the TR Electronics sensors
 	final static int RIGHT_ARM_SWITCH_PORT = 5;
-	final static int TOP_LIMIT_SWITCH_PORT = 6;
+	final static int TOP_LIMIT_SWITCH_PORT = 16; //this is WRONG. TEMPORARY FIX
 
 	
 	//sensor config values
@@ -89,9 +89,9 @@ public final class RobotMap {
 	 */
 
 	/*** location of HAll effect sensor ports */ 
-	final static int HALL_L_MID_PORT = 10;
-	final static int HALL_R_MID_PORT = 11;
-	final static int HALL_L_TOP_PORT = 12;
-	final static int HALL_R_TOP_PORT = 13;
+	final static int HALL_L_MID_PORT = 6;
+	final static int HALL_R_MID_PORT = 9;
+	final static int HALL_L_TOP_PORT = 8;
+	final static int HALL_R_TOP_PORT = 7;
 	
 }
