@@ -7,9 +7,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static org.raiderrobotics.RobotMap.*;
 
-import com.ni.vision.NIVision;
+//import com.ni.vision.NIVision;
 //import com.ni.vision.NIVision.DrawMode;
-import com.ni.vision.NIVision.Image;
+//import com.ni.vision.NIVision.Image;
 //import com.ni.vision.NIVision.ShapeMode;
 
 
@@ -21,6 +21,7 @@ public class Robot extends IterativeRobot {
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
 	ArmControl armControl;
+	HallArmControl hallArmControl;
 	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
 
@@ -46,10 +47,11 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-		armControl = ArmControl.setupInstance(xbox360arm);
+		//armControl = ArmControl.setupInstance(xbox360arm);
+		hallArmControl = HallArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
 
-		//make an ArmControl instance in BinArmSystem in order to access armControl
+		//make an ArmControl instance in BinArmSystem in order to access armControl when you need it
 		binArmSystem = new BinArmSystem(xbox360arm);
 
 		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
@@ -98,7 +100,7 @@ public class Robot extends IterativeRobot {
 
 		normalDrive();
 
-		armControl.tick();
+		hallArmControl.tick();
 
 		binArmSystem.tick();
 
@@ -161,4 +163,3 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("Chooser", chooser1);
 	}
 }
-
