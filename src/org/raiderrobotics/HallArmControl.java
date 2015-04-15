@@ -39,15 +39,16 @@ public class HallArmControl {
 	static final double ARMSPEED = 1.0; 
 		
 	//used for rumble
-	static final int	RIGHTRUMBLE = 1,
-						LEFTRUMBLE = 2; 		
-		 
+	//static final int	RIGHTRUMBLE = 1,
+	//					LEFTRUMBLE = 2; 		
+	enum RumbleSide {LEFT, RIGHT;}	 
+	
 	int rightRumbleCount = 0;
 	int leftRumbleCount = 0;
 
 
 	//Different control modes. To use from within a different class
-	public enum Mode{
+	enum Mode{
 		STOP,
 		MOVE_TO_BOTTOM,
 		MOVE_TO_MIDDLE,
@@ -93,7 +94,7 @@ public class HallArmControl {
 	 *
 	 * @param xbox The arm controller reference
 	 */
-	private ArmControl(Joystick xbox) {
+	private HallArmControl(Joystick xbox) {
 		this.xbox = xbox;
 
 		//configure both talons
@@ -114,8 +115,8 @@ public class HallArmControl {
 
 		leftBottomSwitch = new DigitalInput(LEFT_ARM_SWITCH_PORT);
 		rightBottomSwitch = new DigitalInput(RIGHT_ARM_SWITCH_PORT);
-		leftMidSensor = new DigitalInput(HALL_L_MID_PORT);
-		leftMidSensor = new DigitalInput(HALL_R_MID_PORT);
+		leftMiddleSensor = new DigitalInput(HALL_L_MID_PORT);
+		leftMiddleSensor = new DigitalInput(HALL_R_MID_PORT);
 		leftTopSensor = new DigitalInput(HALL_L_TOP_PORT);
 		rightTopSensor = new DigitalInput(HALL_R_TOP_PORT);
 		
@@ -165,6 +166,7 @@ public class HallArmControl {
 		
 		//******* Manual Drive Section *******//
 		//Check for manual drive
+/*
 		double move = xbox.getRawAxis(XBOX_R_TRIGER) - xbox.getRawAxis(XBOX_L_TRIGGER);
 		if(Math.abs(move) > 0.15){
 			armMode = Mode.STOP; //Reset the current mode
@@ -198,6 +200,7 @@ public class HallArmControl {
 
 			return;
 		} 
+*/
 		//********  End manual arm movement section  *******//
 		
 		
@@ -207,7 +210,7 @@ public class HallArmControl {
 		if (xbox.getRawButton(XBOX_BTN_X)) {
 			armMode = Mode.STOP;
 			moving = Moving.STOPPED;
-			startRumble(LEFTRUMBLE);
+			startRumble(RumbleSide.LEFT);
 		}
 
 		//Move to rest button
@@ -337,6 +340,8 @@ public class HallArmControl {
 			leftTalon.set(+ARMSPEED * L_UP_SPEED_MULT);
 			rightTalon.set(+ARMSPEED * R_UP_SPEED_MULT);
 		}
+		
+		return false;
 
 	}
 
@@ -372,6 +377,7 @@ public class HallArmControl {
 			return true;
 		}
 		
+		return false;
 	}
 		
 	//move both arms to the bottom position
@@ -405,10 +411,11 @@ public class HallArmControl {
 		
 		if (Lposition == Position.BOTTOM && Rposition == Position.BOTTOM) {		
 			moving = Moving.STOPPED;
-			startRumble(LEFTRUMBLE);
+			startRumble(RumbleSide.LEFT);
 			return true;
 		}
 		
+		return false;
 	}
 
 	//stop arm moving -- called from Robot.java (limit switch)
@@ -432,9 +439,9 @@ public class HallArmControl {
 		rumbleCounter = 50;
 	}
 */
-	private void startRumble(int side){
+	private void startRumble(RumbleSide side){
 		
-		if(side == RIGHT){
+		if(side == RumbleSide.RIGHT){
 			if(rightRumbleCount == 0){
 				rightRumbleCount = 1;
 			}

@@ -20,7 +20,7 @@ public class Robot extends IterativeRobot {
 	Talon talon1, talon2;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
-	ArmControl armControl;
+	//ArmControl armControl;
 	HallArmControl hallArmControl;
 	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
@@ -65,7 +65,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void disabledInit() {
-		armControl.reset();
+		hallArmControl.reset(); //is this necessary for Hall sensors?
 		talon1.stopMotor();
 		talon2.stopMotor();		
 	}
