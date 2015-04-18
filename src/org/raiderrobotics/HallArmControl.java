@@ -68,15 +68,9 @@ public class HallArmControl {
 	
 	enum Moving {UP, DOWN, STOPPED;}
 	Moving moveMode = Moving.STOPPED;
-	
-	
-	//Dynamic state variables
-	private boolean rightDoneMoving;
-	private boolean leftDoneMoving;
-	//    private int balancePosition=0;
-	//    private boolean balanceRight;
 
 	static private HallArmControl instance;
+
 	public static HallArmControl setupInstance(Joystick joystick){
 		if(instance == null)
 			instance = new HallArmControl(joystick);
@@ -140,15 +134,8 @@ public class HallArmControl {
 		leftTalon.setPosition(0);
 		rightTalon.setPosition(0);
 
-//		if (Math.abs(baseSpeed) < 0.08)		//which number should we use?
-//			baseSpeed = 0.5;
-
-		rightDoneMoving = false;
-		leftDoneMoving = false;
-
 		armMode = Mode.STOP;
 		moveMode = Moving.STOPPED;
-
 	}
 
 	/**
@@ -205,7 +192,7 @@ public class HallArmControl {
 		//********  End manual arm movement section  *******//
 		
 		
-		//Check the mode
+		//Check the mode. Use else-ifs to handle two buttons being pressed simultaneously
 
 		//Emergency stop button
 		if (xbox.getRawButton(XBOX_BTN_X)) {
@@ -221,29 +208,21 @@ public class HallArmControl {
 
 		//Move to middle button
 		else if (xbox.getRawButton(XBOX_BTN_B)) {
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_MIDDLE;
 		}
 
 		//Move to top button
 		else if (xbox.getRawButton(XBOX_BTN_Y)) {
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_TOP;
 		}
 
 		//Pick up and move to middle
 		else if (xbox.getRawButton(XBOX_BUMPER_R)){
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_MIDDLE;
 		}
 
 		//Pick up and move to top
 		else if (xbox.getRawButton(XBOX_BUMPER_L)){
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_TOP;
 		}
 
@@ -256,20 +235,7 @@ public class HallArmControl {
 			break;
 
 		case MOVE_TO_MIDDLE:
-			//check if done
-			if (rightDoneMoving && leftDoneMoving) {
-				rightTalon.set(0.0);
-				leftTalon.set(0.0);
-
-				rightDoneMoving = false;
-				leftDoneMoving = false;
-
-				armMode = Mode.STOP;
-			}
-			//Not done? continue to move to middle
-			else {
-				moveToMiddle();
-			}
+			if(moveToMiddle()) armMode = Mode.STOP;      	
 			break;
 
 		case MOVE_TO_TOP:
@@ -293,14 +259,9 @@ public class HallArmControl {
 		case STOP:
 		default:
 			//Reset stuff (but don't call "reset()" as that will reset the encoders too) 
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			moveMode = Moving.STOPPED;
 			rightTalon.set(0.0);
 			leftTalon.set(0.0);
-
-			//for testing only. Move to where it detects the bottom limit switch.
-			
 		}
 	}
 
