@@ -117,6 +117,8 @@ public class AutoProgram {
 		//start the bin motor after WAITTIME
 		if (System.currentTimeMillis() - startTime > AUTO_WAITTIME) {
 			talonTwister.set(1.0);
+			//DEBUG
+			//System.out.println(talonTwister.getOutputCurrent());
 		}
 	}
 

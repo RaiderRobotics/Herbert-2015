@@ -63,8 +63,7 @@ public final class RobotMap {
 	final static int GYRO1_PORT = 0;
 	final static int LEFT_ARM_SWITCH_PORT = 4;	//the TR Electronics sensors
 	final static int RIGHT_ARM_SWITCH_PORT = 5;
-	final static int TOP_LIMIT_SWITCH_PORT = 6;
-
+	final static int TOP_LIMIT_SWITCH_PORT = 19; //this is DIO 9 on the MXP port. It is pin 29, the third pair from the left.
 	
 	//sensor config values
 	final static double ENCODER_DIST_PER_PULSE = 0.1665; //Note: this will not work at high speeds. The robot will overshoot.
@@ -75,12 +74,13 @@ public final class RobotMap {
 	final static int AUTO_RECYCLE = 0;
 	final static int AUTO_TOTE = 1;
 	final static int AUTO_MULTITOTE = 2;
-
-	final static double AUTO_ZONE_DISTANCE = 3000.0;
+	
+	//NOTE!!! THe following 4 settings are for HERBERT V1, not the second one that we built.
+	final static double AUTO_ZONE_DISTANCE = +3000.0;	// originally +3000.0 and - 500.0
 	final static double AUTO_BACKUP_DISTANCE = -500.0;
-	final static double AUTO_SPEED_FWD = 1.0;
+	final static double AUTO_SPEED_FWD = 1.0; //was 0.8
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
-	final static long AUTO_WAITTIME = 3000;  //10 seconds in milliseconds. Time to wait before starting Bin rotation 
+	final static long AUTO_WAITTIME = 500;  //seconds in milliseconds. Time to wait before starting Bin rotation 
 	
 	final static double TALONRAMPINCREMENT = 0.1; 
 	/* NOTE: make a separate constant if you are using the multiply method for ramping the Talons. 
@@ -88,5 +88,10 @@ public final class RobotMap {
 	 * Do NOT set this to 1.1 . Make a new constant.
 	 */
 
+	/*** location of HAll effect sensor ports */ 
+	final static int HALL_L_MID_PORT = 6;
+	final static int HALL_R_MID_PORT = 7;
+	final static int HALL_L_TOP_PORT = 8;
+	final static int HALL_R_TOP_PORT = 9;
 	
 }
