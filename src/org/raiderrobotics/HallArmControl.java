@@ -31,7 +31,7 @@ public class HallArmControl {
 
 	//multipliers to handle non-identical motors - in both directions. Find values by trial and error.
 	static final double L_UP_SPEED_MULT = 1.00;
-	static final double R_UP_SPEED_MULT = 1.00;
+	static final double R_UP_SPEED_MULT = 0.95;
 	static final double L_DOWN_SPEED_MULT = 1.00;
 	static final double R_DOWN_SPEED_MULT = 1.00;
 
@@ -67,16 +67,10 @@ public class HallArmControl {
 	Position Rposition = Position.MIDDLE;	//assume that it starts here
 	
 	enum Moving {UP, DOWN, STOPPED;}
-	Moving moving = Moving.STOPPED;
-	
-	
-	//Dynamic state variables
-	private boolean rightDoneMoving;
-	private boolean leftDoneMoving;
-	//    private int balancePosition=0;
-	//    private boolean balanceRight;
+	Moving moveMode = Moving.STOPPED;
 
 	static private HallArmControl instance;
+
 	public static HallArmControl setupInstance(Joystick joystick){
 		if(instance == null)
 			instance = new HallArmControl(joystick);
@@ -116,7 +110,7 @@ public class HallArmControl {
 		leftBottomSwitch = new DigitalInput(LEFT_ARM_SWITCH_PORT);
 		rightBottomSwitch = new DigitalInput(RIGHT_ARM_SWITCH_PORT);
 		leftMiddleSensor = new DigitalInput(HALL_L_MID_PORT);
-		leftMiddleSensor = new DigitalInput(HALL_R_MID_PORT);
+		rightMiddleSensor = new DigitalInput(HALL_R_MID_PORT);
 		leftTopSensor = new DigitalInput(HALL_L_TOP_PORT);
 		rightTopSensor = new DigitalInput(HALL_R_TOP_PORT);
 		
@@ -140,14 +134,8 @@ public class HallArmControl {
 		leftTalon.setPosition(0);
 		rightTalon.setPosition(0);
 
-//		if (Math.abs(baseSpeed) < 0.08)		//which number should we use?
-//			baseSpeed = 0.5;
-
-		rightDoneMoving = false;
-		leftDoneMoving = false;
-
 		armMode = Mode.STOP;
-
+		moveMode = Moving.STOPPED;
 	}
 
 	/**
@@ -204,12 +192,12 @@ public class HallArmControl {
 		//********  End manual arm movement section  *******//
 		
 		
-		//Check the mode
+		//Check the mode. Use else-ifs to handle two buttons being pressed simultaneously
 
 		//Emergency stop button
 		if (xbox.getRawButton(XBOX_BTN_X)) {
 			armMode = Mode.STOP;
-			moving = Moving.STOPPED;
+			moveMode = Moving.STOPPED;
 			startRumble(RumbleSide.LEFT);
 		}
 
@@ -220,29 +208,21 @@ public class HallArmControl {
 
 		//Move to middle button
 		else if (xbox.getRawButton(XBOX_BTN_B)) {
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_MIDDLE;
 		}
 
 		//Move to top button
 		else if (xbox.getRawButton(XBOX_BTN_Y)) {
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.MOVE_TO_TOP;
 		}
 
 		//Pick up and move to middle
 		else if (xbox.getRawButton(XBOX_BUMPER_R)){
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_MIDDLE;
 		}
 
 		//Pick up and move to top
 		else if (xbox.getRawButton(XBOX_BUMPER_L)){
-			rightDoneMoving = false;
-			leftDoneMoving = false;
 			armMode = Mode.PICK_UP_TO_TOP;
 		}
 
@@ -255,20 +235,7 @@ public class HallArmControl {
 			break;
 
 		case MOVE_TO_MIDDLE:
-			//check if done
-			if (rightDoneMoving && leftDoneMoving) {
-				rightTalon.set(0.0);
-				leftTalon.set(0.0);
-
-				rightDoneMoving = false;
-				leftDoneMoving = false;
-
-				armMode = Mode.STOP;
-			}
-			//Not done? continue to move to middle
-			else {
-				moveToMiddle();
-			}
+			if(moveToMiddle()) armMode = Mode.STOP;      	
 			break;
 
 		case MOVE_TO_TOP:
@@ -292,14 +259,9 @@ public class HallArmControl {
 		case STOP:
 		default:
 			//Reset stuff (but don't call "reset()" as that will reset the encoders too) 
-			rightDoneMoving = false;
-			leftDoneMoving = false;
-			moving = Moving.STOPPED;
+			moveMode = Moving.STOPPED;
 			rightTalon.set(0.0);
 			leftTalon.set(0.0);
-
-			//for testing only. Move to where it detects the bottom limit switch.
-			
 		}
 	}
 
@@ -307,36 +269,49 @@ public class HallArmControl {
 	private boolean moveToMiddle() {
 		
 		//First check if it is already at the middle.
-		if(leftMiddleSensor.get()){
+		if(!leftMiddleSensor.get()){
 			Lposition = Position.MIDDLE;
 			leftTalon.set(0.0);				
 		}
-		//Move right to bottom
-		if(rightMiddleSensor.get()){
+		
+		if(!rightMiddleSensor.get()){
 			Rposition = Position.MIDDLE;
 			rightTalon.set(0.0);				
 		} 
 			
 		if (Lposition == Position.MIDDLE && Rposition == Position.MIDDLE) {			
-			moving = Moving.STOPPED;
+			moveMode = Moving.STOPPED;
 			return true;
 		}
 		
 		/* Moving is determined only by the position of the LEFT ARM! I think that this is okay, 
 		since it is a very rough position, and the moving direction doesn't get changed until both are at rest.  */ 
 		if (Lposition == Position.LOWER || Lposition == Position.BOTTOM) {
-			moving = moving.UP;
+			moveMode = Moving.UP;
 		}
 		if (Lposition == Position.UPPER || Lposition == Position.TOP || Lposition == Position.TOO_HIGH) {
-			moving = moving.DOWN;
+			moveMode = Moving.DOWN;
 		}
 		
-		if (moving == moving.DOWN) {
+		//stop if you hit top sensor
+		if (moveMode == Moving.UP) {
+			if(!leftTopSensor.get()){
+				Lposition = Position.TOP;
+				leftTalon.set(0.0);				
+			}
+			
+			if(!rightTopSensor.get()){
+				Rposition = Position.TOP;
+				rightTalon.set(0.0);				
+			} 
+		}
+
+		if (moveMode == Moving.DOWN) {
 			leftTalon.set(-ARMSPEED * L_DOWN_SPEED_MULT);
 			rightTalon.set(-ARMSPEED * R_DOWN_SPEED_MULT);
 		}
 		
-		if (moving == moving.UP) {
+		if (moveMode == Moving.UP) {
 			leftTalon.set(+ARMSPEED * L_UP_SPEED_MULT);
 			rightTalon.set(+ARMSPEED * R_UP_SPEED_MULT);
 		}
@@ -349,31 +324,40 @@ public class HallArmControl {
 	boolean moveToTop(){		
 				
 		//Move left to top
-		if(leftTopSensor.get()){
+		if(!leftTopSensor.get()){
 			Lposition = Position.TOP;
 			leftTalon.set(0.0);				
 		} else {
 			leftTalon.set(+ARMSPEED * L_UP_SPEED_MULT);
 		}
 		//Move right to top
-		if(rightTopSensor.get()){
+		if(!rightTopSensor.get()){
 			Rposition = Position.TOP;
 			rightTalon.set(0.0);				
 		} else {
 			rightTalon.set(+ARMSPEED * R_UP_SPEED_MULT);
 		}
 			
-		//update position. ** ONLY USES THE LEFT ARM!!
-		if (Lposition == Position.BOTTOM) Lposition = Position.LOWER;
-		if (Rposition == Position.BOTTOM) Rposition = Position.LOWER;
-		if (leftMiddleSensor.get())  Lposition = Position.MIDDLE;
-		if (rightMiddleSensor.get()) Rposition = Position.MIDDLE;
-		if (Lposition == Position.MIDDLE) Lposition = Position.UPPER;
-		if (Rposition == Position.MIDDLE) Rposition = Position.UPPER;
+		
+		if (Lposition == Position.BOTTOM)  {
+			Lposition = Position.LOWER;
+		} else 	if (!leftMiddleSensor.get()) {
+			Lposition = Position.MIDDLE;
+		} else if (Lposition == Position.MIDDLE) {
+			Lposition = Position.UPPER; 
+		}
+		
+		if (Rposition == Position.BOTTOM) {
+			Rposition = Position.LOWER;
+		} else if (!rightMiddleSensor.get()) {
+			Rposition = Position.MIDDLE;
+		} else if (Rposition == Position.MIDDLE) {
+			Rposition = Position.UPPER;
+		}
 		
 		//check if BOTH are at the top
 		if (Lposition == Position.TOP && Rposition == Position.TOP) {		
-			moving = Moving.STOPPED;
+			moveMode = Moving.STOPPED;
 			return true;
 		}
 		
@@ -402,15 +386,32 @@ public class HallArmControl {
 		}
 		
 		//update position. ** ONLY USES THE LEFT ARM!!
-		if (Lposition == Position.TOP) Lposition = Position.UPPER;
-		if (Rposition == Position.TOP) Rposition = Position.UPPER;
-		if (leftMiddleSensor.get()) Lposition = Position.MIDDLE;
-		if (rightMiddleSensor.get()) Rposition = Position.MIDDLE;
-		if (Lposition == Position.MIDDLE) Lposition = Position.LOWER;
-		if (Rposition == Position.MIDDLE) Rposition = Position.LOWER;
+//		if (Lposition == Position.TOP) Lposition = Position.UPPER;
+//		if (Rposition == Position.TOP) Rposition = Position.UPPER;
+//		if (leftMiddleSensor.get()) Lposition = Position.MIDDLE;
+//		if (rightMiddleSensor.get()) Rposition = Position.MIDDLE;
+//		if (Lposition == Position.MIDDLE) Lposition = Position.LOWER;
+//		if (Rposition == Position.MIDDLE) Rposition = Position.LOWER;
+		
+		if (Lposition == Position.TOP)  {
+			Lposition = Position.UPPER;
+		} else 	if (!leftMiddleSensor.get()) {
+			Lposition = Position.MIDDLE;
+		} else if (Lposition == Position.MIDDLE) {
+			Lposition = Position.LOWER; 
+		}
+		
+		if (Rposition == Position.TOP) {
+			Rposition = Position.UPPER;
+		} else if (!rightMiddleSensor.get()) {
+			Rposition = Position.MIDDLE;
+		} else if (Rposition == Position.MIDDLE) {
+			Rposition = Position.LOWER;
+		}
+
 		
 		if (Lposition == Position.BOTTOM && Rposition == Position.BOTTOM) {		
-			moving = Moving.STOPPED;
+			moveMode = Moving.STOPPED;
 			startRumble(RumbleSide.LEFT);
 			return true;
 		}
@@ -421,7 +422,7 @@ public class HallArmControl {
 	//stop arm moving -- called from Robot.java (limit switch)
 	public void stop() {
 		armMode = Mode.STOP;
-		moving = Moving.STOPPED;
+		moveMode = Moving.STOPPED;
 	}
 
 	public void setMode(Mode mode){
