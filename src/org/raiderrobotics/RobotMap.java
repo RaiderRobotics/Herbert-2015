@@ -63,8 +63,7 @@ public final class RobotMap {
 	final static int GYRO1_PORT = 0;
 	final static int LEFT_ARM_SWITCH_PORT = 4;	//the TR Electronics sensors
 	final static int RIGHT_ARM_SWITCH_PORT = 5;
-	final static int TOP_LIMIT_SWITCH_PORT = 6;
-
+	final static int TOP_LIMIT_SWITCH_PORT = 19; //this is DIO 9 on the MXP port. It is pin 29, the third pair from the left.
 	
 	//sensor config values
 	final static double ENCODER_DIST_PER_PULSE = 0.1665; //Note: this will not work at high speeds. The robot will overshoot.
@@ -89,9 +88,9 @@ public final class RobotMap {
 	 */
 
 	/*** location of HAll effect sensor ports */ 
-	final static int HALL_L_MID_PORT = 10;
-	final static int HALL_R_MID_PORT = 11;
-	final static int HALL_L_TOP_PORT = 12;
-	final static int HALL_R_TOP_PORT = 13;
+	final static int HALL_L_MID_PORT = 6;
+	final static int HALL_R_MID_PORT = 7;
+	final static int HALL_L_TOP_PORT = 8;
+	final static int HALL_R_TOP_PORT = 9;
 	
 }
