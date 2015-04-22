@@ -8,19 +8,23 @@ public class AutoProgram {
 	Encoder distEncoder;
 	Gyro gyro;
 	ArmControl armControl;
-	CANTalon talonTwister;
 	
 	int programUsed = AUTO_TOTE; //default
 	boolean inAutoZone = false;
 	double startingAngle = 0.0;
+<<<<<<< Updated upstream
+	long startTime = 0;
+	CANTalon talonTwister; //create this again here. It is also in BinArmSystem.
+=======
 	long startingTime = 0L;
 	
-	private enum Status {
-		INIT, MONITOR_CURRENT, ATTACHED
+	enum Status {
+		START, DONE
 	}
 	
 	double startingCurrent = 0.0;
-	Status currentMonStatus = Status.INIT;
+	Status currentMonStatus = Status.START;
+>>>>>>> Stashed changes
 	
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
@@ -41,7 +45,11 @@ public class AutoProgram {
 		distEncoder.reset();
 		gyro.reset();
 		startingAngle = gyro.getAngle();
+<<<<<<< Updated upstream
+		startTime = System.currentTimeMillis();
+=======
 		startingTime = System.currentTimeMillis();
+>>>>>>> Stashed changes
 	}
 
 	void setProgram(int program) {
@@ -51,7 +59,7 @@ public class AutoProgram {
 	/***** called repeatedly by autonomousPeriodic() ******/
 	void run(){
 		
-		if (currentMonStatus != Status.ATTACHED) measureCurrent();
+		if (currentMonStatus != Status.DONE) 	measureCurrent();
 		
 		switch(programUsed) {
 		case AUTO_RECYCLE:
@@ -124,18 +132,11 @@ public class AutoProgram {
 				talon2.stopMotor();	
 			}
 */		}
-		switch (currentMonStatus) {
-		case ATTACHED:
-			talonTwister.set(0.0);
-			//TODO: raiseBIN
-		default:
-			//start the bin motor after WAITTIME
-			if (System.currentTimeMillis() - startingTime > AUTO_WAITTIME) {
-				talonTwister.set(1.0);
-			}
+		
+		//start the bin motor after WAITTIME
+		if (System.currentTimeMillis() - startTime > AUTO_WAITTIME) {
+			talonTwister.set(1.0);
 		}
-		
-		
 	}
 
 /*	
@@ -207,37 +208,15 @@ public class AutoProgram {
 	double curr1 = 0.0;
 	double curr2 = 0.0;
 	double curr3 = 0.0;
-	double currentChangeThresh = 0.3;  //in amps. This could also be changed to %
 	
 	void measureCurrent() {
 		long deltaT = System.currentTimeMillis() - startingTime;
-		double motorCurrent = talonTwister.getOutputCurrent();
-		//DEBUG
-		System.out.println(motorCurrent);
-		
 		switch (currentMonStatus) {
-		case INIT:
+		case START:
 			if (deltaT > 300 && deltaT <= 600) {	//0.3 to 0.6 sec
-				curr1 = motorCurrent; 
+				curr1 = 
 			}
-			if (deltaT > 600 && deltaT <= 900) {	//0.6 to 0.9 sec
-				curr2 = motorCurrent; 
-			}
-			if (deltaT > 300 && deltaT <= 600) {	//0.9 to 01.2 sec
-				curr3 = motorCurrent;
-				
-				startingCurrent = (curr1 + curr2 + curr3) / 3.0;
-				currentMonStatus = Status.MONITOR_CURRENT;		
-			}
-			break;
 			
-		case MONITOR_CURRENT:
-			//TODO: do we want three measurements here too?
-			if ( motorCurrent - startingCurrent > currentChangeThresh) {
-				currentMonStatus = Status.ATTACHED;
-			}
-		default:
-			//nothing
 		}
 	}
 }
