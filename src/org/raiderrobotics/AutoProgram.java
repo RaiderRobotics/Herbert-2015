@@ -4,7 +4,7 @@ package org.raiderrobotics;
 
 import edu.wpi.first.wpilibj.*;
 import static org.raiderrobotics.RobotMap.*;
-import org.raiderrobotics.utils.CircularOperation;
+
 
 public class AutoProgram {
 	Talon talon1, talon2;
@@ -119,30 +119,7 @@ public class AutoProgram {
 			}
 */		}
 	}
-	
-	void tenKProgram(){
-		double currentAngle = gyro.getAngle()%360;
-		double offset = CircularOperation.offsetZero(currentAngle);
-		double rightMotorFactor, leftMotorFactor;
 		
-		if(offset > 0){
-			leftMotorFactor = 0.8;
-			rightMotorFactor = 1.2;
-		}else{
-			leftMotorFactor = 1.2;
-			rightMotorFactor = 0.8;
-		}
-		if(distEncoder.getDistance() > -1000){
-			rampToSpeed(talon1, AUTO_SPEED_FWD * leftMotorFactor);
-			rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
-		}else{
-			distEncoder.reset();
-			talon1.stopMotor();
-			talon2.stopMotor();
-		}	
-
-	}
-	
 	
 	void autoMutitote(){ 
 		
