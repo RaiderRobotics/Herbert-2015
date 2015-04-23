@@ -76,7 +76,7 @@ public final class RobotMap {
 	final static int AUTO_MULTITOTE = 2;
 	
 	//NOTE!!! THe following 4 settings are for HERBERT V1, not the second one that we built.
-	final static double AUTO_ZONE_DISTANCE = +3000.0;	// originally +3000.0 and - 500.0
+	final static double AUTO_ZONE_DISTANCE = +3500.0;	// originally +3000.0 and - 500.0
 	final static double AUTO_BACKUP_DISTANCE = -500.0;
 	final static double AUTO_SPEED_FWD = 1.0; //was 0.8
 	final static double AUTO_SPEED_BCK = 0.4;  //TODO if this is 0.5 or higher, the autoprogram must use rampToSpeed() or the talons and battery get damaged.
