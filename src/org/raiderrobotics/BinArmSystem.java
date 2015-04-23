@@ -14,6 +14,19 @@ public class BinArmSystem {
 	boolean topReached = false;
 	ArmControl armControl;
 	
+	
+	static private BinArmSystem instance;
+	public static BinArmSystem setupInstance(Joystick joystick){
+		if(instance == null)
+			instance = new BinArmSystem(joystick);
+		return instance;
+	}
+
+	public static BinArmSystem  getInstance(){
+		return instance;
+	}
+
+	
 	BinArmSystem(Joystick xbox){
 		this.xbox = xbox;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
@@ -42,8 +55,6 @@ public class BinArmSystem {
 				backPushed = false;
 			}else{
 
-				
-				
 				if(backPushed){ //only when the back button is pushed to run this code
 					if(topReached){ 
 						talonPulley.set(0.15); //try to hold the bin there. This number will need to be adjusted

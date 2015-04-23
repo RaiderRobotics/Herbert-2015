@@ -7,8 +7,8 @@ public class AutoProgram {
 	Talon talon1, talon2;
 	Encoder distEncoder;
 	Gyro gyro;
-	ArmControl armControl;
-	CANTalon talonTwister;
+	HallArmControl hallArmControl;
+	BinArmSystem binArmSystem;
 	
 	int programUsed = AUTO_TOTE; //default
 	boolean inAutoZone = false;
@@ -25,7 +25,7 @@ public class AutoProgram {
 	private int m_nextSampleIndex = 0;
 	
 	private enum CurrentMonitorStatus {
-		WAITING_TO_START, MONITOR_CURRENT, BINATTACHED
+		WAITING_TO_START, MONITOR_CURRENT, BIN_ATTACHED
 	}
 	
 	// A very basic timer for various timing things. 
@@ -60,11 +60,12 @@ public class AutoProgram {
 		talon1 = talonLeft;
 		talon2 = talonRight;
 		distEncoder = encoderA;
-		armControl = ArmControl.getInstance();
+		hallArmControl = HallArmControl.getInstance();
+		binArmSystem = BinArmSystem.getInstance();
 		gyro = gyroInput;
 		gyro.reset();
 		gyro.setSensitivity(0.007);
-		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
+		
 		// Init array for low pass filter of current
 		this.initSamplesArray(DEFAULTSAMPLESARRAYSIZE);
 	}
@@ -84,7 +85,7 @@ public class AutoProgram {
 	/***** called repeatedly by autonomousPeriodic() ******/
 	void run(){
 		
-		if (currentMonStatus != CurrentMonitorStatus.BINATTACHED) measureCurrent();
+		if (currentMonStatus != CurrentMonitorStatus.BIN_ATTACHED) measureCurrent();
 		
 		switch(programUsed) {
 		case AUTO_RECYCLE:
@@ -158,13 +159,14 @@ public class AutoProgram {
 			}
 */		}
 		switch (currentMonStatus) {
-		case BINATTACHED:
-			talonTwister.set(0.0);
+		case BIN_ATTACHED:
+			binArmSystem.talonTwister.set(0.0);
+			binArmSystem.talonPulley.set(0.5);
 			//TODO: raiseBIN
 		default:
 			//start the bin motor after WAITTIME
 			if (System.currentTimeMillis() - startingTime > AUTO_WAITTIME) {
-				talonTwister.set(1.0);
+				binArmSystem.talonTwister.set(1.0);
 			}
 		}
 		
@@ -304,7 +306,7 @@ public class AutoProgram {
 	//	-- turn off the bin arm twist motor?
 	void measureCurrent() {
 		long deltaTimeSinceBoot = System.currentTimeMillis() - startingTime;
-		double motorCurrent = talonTwister.getOutputCurrent();
+		double motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
 		//DEBUG
 		System.out.println(motorCurrent);
 		
@@ -346,7 +348,7 @@ public class AutoProgram {
 				if ( this.getElapsedMS() > CURRENTOVERTHRESHOLDWAITPERIOD )
 				{	// Yes, so start the bin motor rising... (boom goes the dynamite!)
 					// ***********************************************************
-					this.currentMonStatus = CurrentMonitorStatus.BINATTACHED;
+					this.currentMonStatus = CurrentMonitorStatus.BIN_ATTACHED;
 					
 					// Insert supah sexy bin lift code here
 					// ***********************************************************

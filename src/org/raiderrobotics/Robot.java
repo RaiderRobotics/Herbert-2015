@@ -7,9 +7,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static org.raiderrobotics.RobotMap.*;
 
-import com.ni.vision.NIVision;
+//import com.ni.vision.NIVision;
 //import com.ni.vision.NIVision.DrawMode;
-import com.ni.vision.NIVision.Image;
+//import com.ni.vision.NIVision.Image;
 //import com.ni.vision.NIVision.ShapeMode;
 
 
@@ -20,11 +20,10 @@ public class Robot extends IterativeRobot {
 	Talon talon1, talon2;
 	DriveTrainGyro gyro1;
 	Encoder encodeDriveL, encodeDriveR;
-	ArmControl armControl;
+	//ArmControl armControl;
+	HallArmControl hallArmControl;
 	BinArmSystem binArmSystem;
 	AutoProgram autoProgram;
-//	int cameraSession;
-//	Image imageFrame;
 
 	public void robotInit() {
 		talon1 = new Talon(TALON_1_PORT);
@@ -48,10 +47,11 @@ public class Robot extends IterativeRobot {
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
 
-		armControl = ArmControl.setupInstance(xbox360arm);
+		//armControl = ArmControl.setupInstance(xbox360arm);
+		hallArmControl = HallArmControl.setupInstance(xbox360arm);
 		//armControl.debug = true;
 
-		//make an ArmControl instance in BinArmSystem in order to access armControl
+		//make an ArmControl instance in BinArmSystem in order to access armControl when you need it
 		binArmSystem = new BinArmSystem(xbox360arm);
 
 		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
@@ -61,11 +61,11 @@ public class Robot extends IterativeRobot {
 		autoProgram = new AutoProgram(talon1, talon2, encodeDriveL, gyro1);
 		autoProgram.setProgram(AUTO_RECYCLE);
 
-		//setUpSmartDashboard();
+		setUpSmartDashboard();
 	}
 
 	public void disabledInit() {
-		armControl.reset();
+		hallArmControl.reset(); //is this necessary for Hall sensors?
 		talon1.stopMotor();
 		talon2.stopMotor();		
 	}
@@ -81,7 +81,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void teleopInit() {
-		binArmSystem.stopRotation();	//this might still be rotating from autonomous mode
+		binArmSystem.stopRotation();
 	}
 
 	/* This method contains all buttons and joysticks.
@@ -91,23 +91,21 @@ public class Robot extends IterativeRobot {
 	 */
 	public void teleopPeriodic() {
 
-/*		
 		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
-		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
-		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
-		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
-		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
-*/
-		
+//		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
+//		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
+//		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
+//		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
+
 		normalDrive();
 
-		armControl.tick();
+		hallArmControl.tick();
 
 		binArmSystem.tick();
 
-//		if (gyro1.isTurning()) gyro1.continueTurning();
+		if (gyro1.isTurning()) gyro1.continueTurning();
 	}
 
 	// Drive the robot normally, apply speed boost if needed
@@ -165,6 +163,4 @@ public class Robot extends IterativeRobot {
 		chooser1.addObject("Option 2", "z");
 		SmartDashboard.putData("Chooser", chooser1);
 	}
-
 }
-
