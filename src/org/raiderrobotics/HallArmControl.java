@@ -30,9 +30,9 @@ public class HallArmControl {
 	DigitalInput leftTopSensor, rightTopSensor;
 
 	//multipliers to handle non-identical motors - in both directions. Find values by trial and error.
-	static final double L_UP_SPEED_MULT = 1.00;
+	static final double L_UP_SPEED_MULT = 1.00; //ERROR: this slows the RIGHT arm
 	static final double R_UP_SPEED_MULT = 1.00;
-	static final double L_DOWN_SPEED_MULT = 1.00;
+	static final double L_DOWN_SPEED_MULT = 1.00; //which arm does this slow?
 	static final double R_DOWN_SPEED_MULT = 1.00;
 
 	//general speed of the arms
