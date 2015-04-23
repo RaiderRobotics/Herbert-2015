@@ -15,12 +15,43 @@ public class AutoProgram {
 	double startingAngle = 0.0;
 	long startingTime = 0L;
 	
-	private enum Status {
-		INIT, MONITOR_CURRENT, ATTACHED
+	// These are for use with the bin arm current sensor
+	// The array size is how many samples we are taking, so 10 would be for the 
+	//	last 10 samples (if 1 us per sample, then the last 10 us)
+	final static int MAXSAMPLESARRAYSIZE = 1000;
+	final static int DEFAULTSAMPLESARRAYSIZE = 25;			  // 25*20ms = 500  ms
+	private int m_samplesArraySize = DEFAULTSAMPLESARRAYSIZE;
+	private double[] m_currentSamplesArray;
+	private int m_nextSampleIndex = 0;
+	
+	private enum CurrentMonitorStatus {
+		WAITING_TO_START, MONITOR_CURRENT, BINATTACHED
 	}
 	
+	// A very basic timer for various timing things. 
+	private long m_startTime = 0;
+	// Saves the current time since boot
+	void ResetTimer() {
+		this.m_startTime = System.currentTimeMillis();
+		return;
+	}
+	
+	// Returns the elasped time (ms) since ResetTimer() was called
+	long getElapsedMS() {
+		long elapsedTime = System.currentTimeMillis() - this.m_startTime;
+		// If you didn't call ResetTimer(), this value might be negative, so fix that
+		if ( elapsedTime < 0 )
+		{	// Oops. Didn't call reset
+			this.ResetTimer();
+			elapsedTime = 0;	// Return zero rather than a negative time
+		}
+		return elapsedTime;
+	}
+	// End of: very basic timer
+	
+	
 	double startingCurrent = 0.0;
-	Status currentMonStatus = Status.INIT;
+	CurrentMonitorStatus currentMonStatus = CurrentMonitorStatus.WAITING_TO_START;
 	
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
@@ -34,6 +65,8 @@ public class AutoProgram {
 		gyro.reset();
 		gyro.setSensitivity(0.007);
 		talonTwister = new CANTalon(TALON_TWISTER_CAN_ID);
+		// Init array for low pass filter of current
+		this.initSamplesArray(DEFAULTSAMPLESARRAYSIZE);
 	}
 
 	void init(){
@@ -51,7 +84,7 @@ public class AutoProgram {
 	/***** called repeatedly by autonomousPeriodic() ******/
 	void run(){
 		
-		if (currentMonStatus != Status.ATTACHED) measureCurrent();
+		if (currentMonStatus != CurrentMonitorStatus.BINATTACHED) measureCurrent();
 		
 		switch(programUsed) {
 		case AUTO_RECYCLE:
@@ -125,7 +158,7 @@ public class AutoProgram {
 			}
 */		}
 		switch (currentMonStatus) {
-		case ATTACHED:
+		case BINATTACHED:
 			talonTwister.set(0.0);
 			//TODO: raiseBIN
 		default:
@@ -203,41 +236,132 @@ public class AutoProgram {
 		}
 	}
 	*/
+
+	// This allocates and initilizes (or re-allocates, etc.) the samples array
+	void initSamplesArray( int newArraySize ) {
+		// check for stupid array size value (too big or too small)
+		if ( ( newArraySize < 0 ) || ( newArraySize > MAXSAMPLESARRAYSIZE ) ) {
+			newArraySize = DEFAULTSAMPLESARRAYSIZE;
+		}	
+		// The array size is sensible, now, so allocate (or re-allocate) the array
+		this.m_samplesArraySize = newArraySize;
+		this.m_currentSamplesArray = new double[this.m_samplesArraySize];
+		
+		// Does Java automatically place zeros (0.0) in these arrays? Only the Shadow knows...
+		for ( int index = 0; index != this.m_samplesArraySize; index++ ) {
+			this.m_currentSamplesArray[index] = 0.0;
+		}
+		// All done. Array is filled with zeros.
+		// Set current "next add" index value to the start of the array
+		this.m_nextSampleIndex = 0;
+		return;
+	}
 	
-	double curr1 = 0.0;
-	double curr2 = 0.0;
-	double curr3 = 0.0;
-	double currentChangeThresh = 0.3;  //in amps. This could also be changed to %
+	double getAverageCurrent() {
+		double average = 0.0;
+		for ( int index = 0; index != this.m_samplesArraySize; index++ ) {
+			average += m_currentSamplesArray[index];
+		}
+		average = average / (double)this.m_samplesArraySize;
+		return average;
+	}
 	
+	void addSampleCurrent( double currentSample ) {
+		this.m_currentSamplesArray[this.m_nextSampleIndex] = currentSample;
+		// Move to next location in array
+		this.m_nextSampleIndex++;
+		// To far?
+		if ( this.m_nextSampleIndex >= this.m_samplesArraySize ) {
+			// Yup. So reset to start of array...
+			this.m_nextSampleIndex = 0;
+		}
+		return;
+	}
+	
+	
+//	double curr1 = 0.0;
+//	double curr2 = 0.0;
+//	double curr3 = 0.0;
+	// This is how long we wait until we start to monitor the current (ms)
+	final long CURRENTMONITORSTARTDELAY = 500;	// in milliseconds
+	// The threshold the bin motor current needs to be to assume it's engaged the recycle bin
+	final double CURRENTCHANGETHRESHOLD = 0.3;  //in amps. This could also be changed to %
+	// This is how long the current must be over the threshold before the bin arm engages. 
+	final double CURRENTOVERTHRESHOLDWAITPERIOD = 500;	// in milliseconds
+	
+	// If the current drops below threshold, this is reset to the current time (resetting the timer, effectively)
+	// If detla between this and current time is > CURRENTOVERTHRESHOLDWAITPERIOD, we start the bin
+	// This is called all the time in auto. 
+	// Each time, it will add an average current to the array (low pass filter)
+	// If the average current (over that period) is more than some set value (i.e. the current has spiked 
+	//	because the robot has 'caught' the recycle bin and is turning it on the ground), then a timer is started.
+	// (Note: this 'timer' is really just a time stamp thing, but will return the elapsed time since reset)
+	// If the current goes BELOW this value (which is very likely to happen), then the time is 'reset to zero'.
+	// (Note: i.e. the current time is reset)
+	// If the current stays ABOVE the threshold for more than some fixed time (the time we're going to wait to
+	//	be 'sure' the motor has caught the recycle bin), then we do something sexy:
+	//  -- start the bin arm lifting?
+	//	-- turn off the bin arm twist motor?
 	void measureCurrent() {
-		long deltaT = System.currentTimeMillis() - startingTime;
+		long deltaTimeSinceBoot = System.currentTimeMillis() - startingTime;
 		double motorCurrent = talonTwister.getOutputCurrent();
 		//DEBUG
 		System.out.println(motorCurrent);
 		
 		switch (currentMonStatus) {
-		case INIT:
-			if (deltaT > 300 && deltaT <= 600) {	//0.3 to 0.6 sec
-				curr1 = motorCurrent; 
+		case WAITING_TO_START:
+			// Waited long enough?
+			if ( deltaTimeSinceBoot > CURRENTMONITORSTARTDELAY ) {
+				// Change state to monitor current
+				this.currentMonStatus = CurrentMonitorStatus.MONITOR_CURRENT;
+				// Start the timer (used in the MONITOR_CURRENT part)
+				this.ResetTimer();
 			}
-			if (deltaT > 600 && deltaT <= 900) {	//0.6 to 0.9 sec
-				curr2 = motorCurrent; 
-			}
-			if (deltaT > 300 && deltaT <= 600) {	//0.9 to 01.2 sec
-				curr3 = motorCurrent;
-				
-				startingCurrent = (curr1 + curr2 + curr3) / 3.0;
-				currentMonStatus = Status.MONITOR_CURRENT;		
-			}
+//			if (deltaT > 300 && deltaT <= 600) {	//0.3 to 0.6 sec
+//				curr1 = motorCurrent;
+//				
+//			}
+//			if (deltaT > 600 && deltaT <= 900) {	//0.6 to 0.9 sec
+//				curr2 = motorCurrent; 
+//			}
+//			if (deltaT > 300 && deltaT <= 600) {	//0.9 to 01.2 sec
+//				curr3 = motorCurrent;
+//				
+//				startingCurrent = (curr1 + curr2 + curr3) / 3.0;
+//				currentMonStatus = Status.MONITOR_CURRENT;		
+//			}
 			break;
 			
 		case MONITOR_CURRENT:
-			//TODO: do we want three measurements here too?
-			if ( motorCurrent - startingCurrent > currentChangeThresh) {
-				currentMonStatus = Status.ATTACHED;
+			// Add current sample
+			this.addSampleCurrent(motorCurrent);
+			
+			// Current high enough?
+			if ( this.getAverageCurrent() < CURRENTCHANGETHRESHOLD )
+			{	// No, so reset the timer to zero
+				this.ResetTimer();
 			}
-		default:
+			else
+			{	// Yes current IS high enough, but have we waited long enough?
+				if ( this.getElapsedMS() > CURRENTOVERTHRESHOLDWAITPERIOD )
+				{	// Yes, so start the bin motor rising... (boom goes the dynamite!)
+					// ***********************************************************
+					this.currentMonStatus = CurrentMonitorStatus.BINATTACHED;
+					
+					// Insert supah sexy bin lift code here
+					// ***********************************************************
+				}
+			}
+			
+			//TODO: do we want three measurements here too?
+//			if ( motorCurrent - startingCurrent > currentChangeThresh) {
+//				currentMonStatus = Status.ATTACHED;
+//			}
+			break;
+		default: 
 			//nothing
+			break;
 		}
+		return;
 	}
 }
