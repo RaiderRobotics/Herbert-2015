@@ -6,7 +6,8 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 
 public class BinArmSystem {
-	CANTalon talonPulley, talonTwister;
+	CANTalon talonPulley = null;
+	CANTalon talonTwister = null;
 	Joystick xbox;
     DigitalInput limitSwitch;
 	double pulleyPower;

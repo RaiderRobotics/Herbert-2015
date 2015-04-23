@@ -7,8 +7,8 @@ public class AutoProgram {
 	Talon talon1, talon2;
 	Encoder distEncoder;
 	Gyro gyro;
-	HallArmControl hallArmControl;
-	BinArmSystem binArmSystem;
+	HallArmControl hallArmControl = null;
+	BinArmSystem binArmSystem = null;
 	
 	int programUsed = AUTO_TOTE; //default
 	boolean inAutoZone = false;
@@ -306,9 +306,15 @@ public class AutoProgram {
 	//	-- turn off the bin arm twist motor?
 	void measureCurrent() {
 		long deltaTimeSinceBoot = System.currentTimeMillis() - startingTime;
-		double motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
-		//DEBUG
-		System.out.println(motorCurrent);
+		double motorCurrent = 0.0;
+		try {
+			motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
+			//DEBUG
+			System.out.println(motorCurrent);			
+		} catch (NullPointerException e) {
+			System.out.println("Null Pointer Exception: getOutPutCurrent");
+			return;
+		}
 		
 		switch (currentMonStatus) {
 		case WAITING_TO_START:
