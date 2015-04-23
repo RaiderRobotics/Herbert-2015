@@ -86,6 +86,7 @@ public class AutoProgram {
 	void run(){
 		
 		if (currentMonStatus != CurrentMonitorStatus.BIN_ATTACHED) measureCurrent();
+		//System.out.println("II=" + binArmSystem.talonTwister.getOutputCurrent());
 		
 		switch(programUsed) {
 		case AUTO_RECYCLE:
@@ -161,7 +162,7 @@ public class AutoProgram {
 		switch (currentMonStatus) {
 		case BIN_ATTACHED:
 			binArmSystem.talonTwister.set(0.0);
-			binArmSystem.talonPulley.set(0.5);
+			//binArmSystem.talonPulley.set(0.5);
 			//TODO: raiseBIN
 		default:
 			//start the bin motor after WAITTIME
@@ -287,7 +288,7 @@ public class AutoProgram {
 	// This is how long we wait until we start to monitor the current (ms)
 	final long CURRENTMONITORSTARTDELAY = 500;	// in milliseconds
 	// The threshold the bin motor current needs to be to assume it's engaged the recycle bin
-	final double CURRENTCHANGETHRESHOLD = 0.3;  //in amps. This could also be changed to %
+	final double CURRENTCHANGETHRESHOLD = 1.25;  //in amps. This could also be changed to %
 	// This is how long the current must be over the threshold before the bin arm engages. 
 	final double CURRENTOVERTHRESHOLDWAITPERIOD = 500;	// in milliseconds
 	
@@ -308,7 +309,8 @@ public class AutoProgram {
 		long deltaTimeSinceBoot = System.currentTimeMillis() - startingTime;
 		double motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
 		//DEBUG
-		System.out.println(motorCurrent);
+		System.out.print("I=" + motorCurrent );
+		System.out.println("\n AVE=" + this.getAverageCurrent());
 		
 		switch (currentMonStatus) {
 		case WAITING_TO_START:
