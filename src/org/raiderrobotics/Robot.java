@@ -52,7 +52,7 @@ public class Robot extends IterativeRobot {
 		//armControl.debug = true;
 
 		//make an ArmControl instance in BinArmSystem in order to access armControl when you need it
-		binArmSystem = new BinArmSystem(xbox360arm);
+		binArmSystem = BinArmSystem.setupInstance(xbox360arm);
 
 		encodeDriveL = new Encoder(1,0,false,Encoder.EncodingType.k4X); //parameters taken from Toropov023 branch (Robot.java)
 		encodeDriveL.setDistancePerPulse(ENCODER_DIST_PER_PULSE); //Not sure parameter contents. A guess from Toropov023

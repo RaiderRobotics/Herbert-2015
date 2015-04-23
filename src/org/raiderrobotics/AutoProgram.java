@@ -306,15 +306,9 @@ public class AutoProgram {
 	//	-- turn off the bin arm twist motor?
 	void measureCurrent() {
 		long deltaTimeSinceBoot = System.currentTimeMillis() - startingTime;
-		double motorCurrent = 0.0;
-		try {
-			motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
-			//DEBUG
-			System.out.println(motorCurrent);			
-		} catch (NullPointerException e) {
-			System.out.println("Null Pointer Exception: getOutPutCurrent");
-			return;
-		}
+		double motorCurrent = binArmSystem.talonTwister.getOutputCurrent();
+		//DEBUG
+		System.out.println(motorCurrent);
 		
 		switch (currentMonStatus) {
 		case WAITING_TO_START:
