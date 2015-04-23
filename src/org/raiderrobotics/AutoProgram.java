@@ -162,8 +162,9 @@ public class AutoProgram {
 		switch (currentMonStatus) {
 		case BIN_ATTACHED:
 			binArmSystem.talonTwister.set(0.0);
-			//binArmSystem.talonPulley.set(0.5);
 			//TODO: raiseBIN
+			binArmSystem.talonPulley.set(0.20);
+			
 		default:
 			//start the bin motor after WAITTIME
 			if (System.currentTimeMillis() - startingTime > AUTO_WAITTIME) {
