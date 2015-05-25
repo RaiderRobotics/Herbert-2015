@@ -9,13 +9,13 @@ public class BinArmSystem {
 	CANTalon talonPulley = null;
 	CANTalon talonTwister = null;
 	Joystick xbox;
-    DigitalInput limitSwitch;
+	DigitalInput limitSwitch;
 	double pulleyPower;
 	boolean backPushed = false;
 	boolean topReached = false;
 	ArmControl armControl;
-	
-	
+
+
 	static private BinArmSystem instance;
 	public static BinArmSystem setupInstance(Joystick joystick){
 		if(instance == null)
@@ -27,7 +27,7 @@ public class BinArmSystem {
 		return instance;
 	}
 
-	
+
 	BinArmSystem(Joystick xbox){
 		this.xbox = xbox;
 		talonPulley = new CANTalon(TALON_PULLEY_CAN_ID);
@@ -35,13 +35,13 @@ public class BinArmSystem {
 		limitSwitch = new DigitalInput(TOP_LIMIT_SWITCH_PORT);
 		armControl = ArmControl.getInstance();
 	}
-	
+
 	public void tick(){
-		
+
 		if(xbox.getRawButton(XBOX_BTN_BACK)){
 			backPushed = true;
 		}
-				
+
 		//pulley system. !limitSwitch.get() -- this means that the switch is still open.
 		if(!limitSwitch.get()){
 			//up and down have different speeds because of gravity 
@@ -59,7 +59,7 @@ public class BinArmSystem {
 				if(backPushed){ //only when the back button is pushed to run this code
 					if(topReached){ 
 						talonPulley.set(0.15); //try to hold the bin there. This number will need to be adjusted
-												//by trial and error.
+						//by trial and error.
 					}else{
 						talonPulley.set(0.5);
 					}
@@ -67,7 +67,7 @@ public class BinArmSystem {
 					talonPulley.set(0.0);
 				}
 			}
-			
+
 		}else{ // bin motor has hit switch at top
 			if(backPushed) topReached = true;
 			talonPulley.set(-0.2);	//maintain 20% power.
@@ -75,9 +75,26 @@ public class BinArmSystem {
 		}
 		//twister system
 		talonTwister.set(xbox.getRawAxis(XBOX_R_XAXIS));
-		
+
 	}
-	
+
+	//called from AutoProgram
+	void autoLiftToTop(double liftSpeed){
+		//stopRotation(); //this should already be done
+		//pulley system. !limitSwitch.get() -- this means that the switch is still open.
+		if(!limitSwitch.get()){
+			if(topReached){ 
+				talonPulley.set(0.15); //try to hold the bin there. This number will need to be adjusted
+				//by trial and error.
+			}else{
+				talonPulley.set(liftSpeed);
+			}
+		}else{ // bin motor has hit switch at top
+			topReached = true;		//in this stripped down version, this stays true
+			talonPulley.set(-0.2);	//drop it down a bit			
+		}
+	}
+
 	void stopRotation() {
 		talonTwister.set(0);
 	}

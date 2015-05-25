@@ -23,6 +23,9 @@ public class AutoProgram {
 	private int m_samplesArraySize = DEFAULTSAMPLESARRAYSIZE;
 	private double[] m_currentSamplesArray;
 	private int m_nextSampleIndex = 0;
+
+	double startingCurrent = 0.0;
+	CurrentMonitorStatus currentMonStatus = CurrentMonitorStatus.WAITING_TO_START;
 	
 	private enum CurrentMonitorStatus {
 		WAITING_TO_START, MONITOR_CURRENT, BIN_ATTACHED
@@ -50,8 +53,6 @@ public class AutoProgram {
 	// End of: very basic timer
 	
 	
-	double startingCurrent = 0.0;
-	CurrentMonitorStatus currentMonStatus = CurrentMonitorStatus.WAITING_TO_START;
 	
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
@@ -161,10 +162,12 @@ public class AutoProgram {
 */		}
 		switch (currentMonStatus) {
 		case BIN_ATTACHED:
-			binArmSystem.talonTwister.set(0.0);
+			//binArmSystem.talonTwister.set(0.0);
+			binArmSystem.stopRotation();
 			//TODO: raiseBIN
-			binArmSystem.talonPulley.set(0.20);
-			
+			//binArmSystem.talonPulley.set(0.20);
+			binArmSystem.autoLiftToTop(0.50);
+			break;
 		default:
 			//start the bin motor after WAITTIME
 			if (System.currentTimeMillis() - startingTime > AUTO_WAITTIME) {
