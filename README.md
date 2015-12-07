@@ -21,3 +21,7 @@ TODO:
 - fix autonomous
 * fix arm (switches need fixing)
 
+-------------
+Future Plans:
+* switch to Command Based programming
+* implement PID controls
