@@ -95,11 +95,18 @@ public class Robot extends IterativeRobot {
 		//TODO: what happens if two buttons are pressed at the same time on the same joystick?!
 		//TODO: make sure that it is logical how one button can cancel a previous task.
 		//detect buttons
+
 		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.turnPlus45();
 		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.turnMinus45();		
 		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orientXAxis();
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
 */
+		//these buttons are arranged based on their layout on the Xbox controller (0, 90, 180, 270)
+		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientZero();
+		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.orient90();		
+		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.orient180();
+		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orient270();
+		
 		
 		normalDrive();
 
@@ -107,7 +114,7 @@ public class Robot extends IterativeRobot {
 
 		binArmSystem.tick();
 
-//		if (gyro1.isTurning()) gyro1.continueTurning();
+		if (gyro1.isTurning()) gyro1.continueTurning();
 	}
 
 	// Drive the robot normally, apply speed boost if needed
