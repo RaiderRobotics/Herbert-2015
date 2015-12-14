@@ -15,6 +15,17 @@ public class AutoProgram {
 	long startTime = 0;
 	CANTalon talonTwister; //create this again here. It is also in BinArmSystem.
 	
+	/* Sample code for DIP switches and LEDs to control autonomous program   */
+		DigitalInput MXP10 = new DigitalInput(10);
+		DigitalInput MXP11 = new DigitalInput(11);
+		DigitalInput MXP12 = new DigitalInput(12);
+		DigitalInput MXP13 = new DigitalInput(13);
+
+		DigitalOutput MXP14 = new DigitalOutput (14);
+		DigitalOutput MXP15 = new DigitalOutput (15);
+		DigitalOutput MXP16 = new DigitalOutput (16);
+		DigitalOutput MXP17 = new DigitalOutput (17);
+	
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
 
@@ -30,11 +41,33 @@ public class AutoProgram {
 	}
 
 	void init(){
+		
 		inAutoZone = false;
 		distEncoder.reset();
 		gyro.reset();
 		startingAngle = gyro.getAngle();
 		startTime = System.currentTimeMillis();
+	/* testing multiple program selection via MXP port  */
+		//turn off LEDs
+		MXP14.set(false);
+		MXP15.set(false);
+		MXP16.set(false);
+		MXP17.set(false);
+		//turn on LED corresponding to DIP switch
+		if (!MXP10.get())  {
+			MXP14.set(true);
+			//autoprogram.set(……);
+		} else if (!MXP11.get())  {
+			MXP15.set(true);
+			//autoprogram.set(……);
+		} else if (!MXP12.get())  {
+			MXP16.set(true);
+			//autoprogram.set(……);
+		} else if (!MXP13.get())  {			
+			MXP17.set(true);
+			//autoprogram.set(……);
+		} 
+		
 	}
 
 	void setProgram(int program) {
