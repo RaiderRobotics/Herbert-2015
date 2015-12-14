@@ -8,24 +8,24 @@ public class AutoProgram {
 	Encoder distEncoder;
 	Gyro gyro;
 	ArmControl armControl;
-	
+
 	int programUsed = AUTO_TOTE; //default
 	boolean inAutoZone = false;
 	double startingAngle = 0.0;
 	long startTime = 0;
 	CANTalon talonTwister; //create this again here. It is also in BinArmSystem.
-	
-	/* Sample code for DIP switches and LEDs to control autonomous program   */
-		DigitalInput MXP10 = new DigitalInput(10);
-		DigitalInput MXP11 = new DigitalInput(11);
-		DigitalInput MXP12 = new DigitalInput(12);
-		DigitalInput MXP13 = new DigitalInput(13);
 
-		DigitalOutput MXP14 = new DigitalOutput (14);
-		DigitalOutput MXP15 = new DigitalOutput (15);
-		DigitalOutput MXP16 = new DigitalOutput (16);
-		DigitalOutput MXP17 = new DigitalOutput (17);
-	
+	/* Sample code for DIP switches and LEDs to control autonomous program   */
+	DigitalInput MXP10 = new DigitalInput(10);
+	DigitalInput MXP11 = new DigitalInput(11);
+	DigitalInput MXP12 = new DigitalInput(12);
+	DigitalInput MXP13 = new DigitalInput(13);
+
+	DigitalOutput MXP14 = new DigitalOutput (14);
+	DigitalOutput MXP15 = new DigitalOutput (15);
+	DigitalOutput MXP16 = new DigitalOutput (16);
+	DigitalOutput MXP17 = new DigitalOutput (17);
+
 	//TODO: Note to use ArmControl system do ArmControl.getInstance() to recover its instance
 	//      then you can access the non-private functions in it.
 
@@ -41,13 +41,13 @@ public class AutoProgram {
 	}
 
 	void init(){
-		
+
 		inAutoZone = false;
 		distEncoder.reset();
 		gyro.reset();
 		startingAngle = gyro.getAngle();
 		startTime = System.currentTimeMillis();
-	/* testing multiple program selection via MXP port  */
+		/* testing multiple program selection via MXP port  */
 		//turn off LEDs
 		MXP14.set(false);
 		MXP15.set(false);
@@ -67,7 +67,7 @@ public class AutoProgram {
 			MXP17.set(true);
 			//autoprogram.set(……);
 		} 
-		
+
 	}
 
 	void setProgram(int program) {
@@ -92,25 +92,25 @@ public class AutoProgram {
 		//armControl.tick();
 		autoMove();
 	}
-	
+
 	void autoRecycle(){
 		//armControl.armMode=armControl.armMode.MOVE_TO_MIDDLE;
 		//armControl.tick();
 		autoMove();
 	}
-	
+
 	/* Drive Straight */
 	void autoMove(){
-		
+
 		double Kp = 0.5; //0.3 works. Possibly a higher value 
 		double currentAngle = gyro.getAngle();
-//		double offset = CircularOperation.offsetZero(currentAngle);
+		//		double offset = CircularOperation.offsetZero(currentAngle);
 		double rightMotorFactor, leftMotorFactor;
-		
+
 		/* use Gyro to drive straight. WOW This is NOT being used! */
 		// the correction should be based on the size of the error
 		//the left motor is not as powerful as the right
-/*		if(currentAngle > startingAngle){
+		/*		if(currentAngle > startingAngle){
 			leftMotorFactor = 1.6 + (currentAngle - startingAngle) * Kp;
 			rightMotorFactor = 1.4;
 		} else if (currentAngle < startingAngle) {
@@ -120,8 +120,8 @@ public class AutoProgram {
 			leftMotorFactor = 1.4;
 			rightMotorFactor = 1.4;
 		}
-*/
-		
+		 */
+
 		/* use encoder to determine location of robot; when to stop */
 		//TODO: the two speed factors have jsut been set to 1 and 0.8 by trial and error.
 		if(! inAutoZone){
@@ -130,14 +130,14 @@ public class AutoProgram {
 				//rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * rightMotorFactor);
 				rampToSpeed(talon1, AUTO_SPEED_FWD * 1.0);
 				rampToSpeed(talon2, -1 * AUTO_SPEED_FWD * 0.8);
-				
+
 			}else{
 				inAutoZone = true;
 				distEncoder.reset();
 				talon1.stopMotor();
 				talon2.stopMotor();
 			}	
-/*		}else{
+			/*		}else{
 			if(distEncoder.getDistance() > AUTO_BACKUP_DISTANCE){
 				talon1.set(-1 * AUTO_SPEED_BCK * leftMotorFactor);
 				talon2.set(AUTO_SPEED_BCK * rightMotorFactor); 
@@ -145,15 +145,15 @@ public class AutoProgram {
 				talon1.stopMotor();
 				talon2.stopMotor();	
 			}
-*/		}
-		
+			 */		}
+
 		//start the bin motor after WAITTIME
 		if (System.currentTimeMillis() - startTime > AUTO_WAITTIME) {
 			talonTwister.set(1.0);
 		}
 	}
 
-/*	
+	/*	
 	void autoRecycle(){
 		if(! inAutoZone){
 			if(distEncoder.getDistance() < AUTO_ZONE_DISTANCE){
@@ -176,19 +176,19 @@ public class AutoProgram {
 			}
 		}
 	}
-*/
+	 */
 	void autoMutitote(){ 
 	}
 
-/* We intended to rewrite using multiplication factor; 
-* talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a correction for speed=0.0
-* We tried the mulplication method. It didn't work as intended. This one does. So let's leave it like this for now.
-* The mutiplication code is underneath this, commented out.
-*/
+	/* We intended to rewrite using multiplication factor; 
+	 * talon.set(talon.get() * 1.1); //It's a bit faster & better for low values. However, it needs a correction for speed=0.0
+	 * We tried the mulplication method. It didn't work as intended. This one does. So let's leave it like this for now.
+	 * The mutiplication code is underneath this, commented out.
+	 */
 	public void rampToSpeed(Talon talon, double speed){
 		if (speed >= 0.0) {	//ramp up to positive speed
 			if (talon.get() < speed) {
-				
+
 				talon.set (talon.get() + TALONRAMPINCREMENT); //add 10% each time (now 5%)
 			} else {
 				talon.set(speed);
@@ -201,8 +201,8 @@ public class AutoProgram {
 			}
 		}
 	}
-	
-/*	
+
+	/*	
 	//There are some problems with this code. The code above works.
 	public void rampToSpeed(Talon talon, double speed) {
 		if (speed >= 0.0) { //ramp up to positive speed
@@ -217,5 +217,5 @@ public class AutoProgram {
 				talon.set(speed);
 		}
 	}
-	*/
+	 */
 }
