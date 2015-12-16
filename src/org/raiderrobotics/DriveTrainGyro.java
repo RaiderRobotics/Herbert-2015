@@ -70,14 +70,14 @@ public class DriveTrainGyro extends Gyro {
 		}
 		if (angleToTurnTo < 0) {
 			if (angleToTurnTo < -180) {
-				rotate(+1);		//the signs here might be backwards
+				rotate(-1);	
 			} else {
-				rotate(-1);
+				rotate(+1);
 			}
 		}
 		//stop when within 5 degrees of target
 		//TODO: use PID to slow to angle		
-		if (Math.abs(angleToTurnTo) < 5) isTurning = false;
+		if (Math.abs(angleToTurnTo) < 8) isTurning = false;
 		
 	}
 	
