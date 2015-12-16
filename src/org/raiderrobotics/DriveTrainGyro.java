@@ -6,6 +6,9 @@ import edu.wpi.first.wpilibj.RobotDrive;
 import static org.raiderrobotics.RobotMap.*;
 
 public class DriveTrainGyro extends Gyro {
+	
+	private final double GYROAUTOSPEED = 0.2;  //this is the turning speed of the robot when usign the gyro to reorient itself
+											//it should later be increased to a large number (0.9?) and then use PID
 	private boolean isTurning = false;
 	private double gyroStartingAngle = 0.0;  //there is another startingAngle variable in AutoProgram.java. Just ignore it for testing this code.
 	private double targetAngle = 0.0;  //relative to starting angle which is set when the gyro is reset
@@ -26,36 +29,9 @@ public class DriveTrainGyro extends Gyro {
 	}
 
 	//set robot to turn to 0 (straight ahead)
-	void orientZero() {
-		targetAngle = 0.0;
-	}
-
-	void orient90() {
-		targetAngle = 90.0;
-	}
-
-	void orient180() {
-		targetAngle = 180.0;
-	}
-
-	void orient270() {
-		targetAngle = 270.0;
-	}
-
-	void orientXAxis() {
-		//TODO: add working code
-		/*
-		 isTurning = true;
-		 targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
-		 */
-	}
-
-	void orientYAxis() {
-		//TODO: add working code
-		/*
+	void orient(double angle) {
+		targetAngle = angle;
 		isTurning = true;
-		targetAngle = ... //the result of some complex calculation (that must, nevertheless, be easy to understand)
-		 */
 	}
 
 	/*
@@ -79,38 +55,43 @@ public class DriveTrainGyro extends Gyro {
 		//driveTrain. (  ) 
 		//TODO: do we use arcadeDrive() or drive() ? or set the motors ourselves?
 		//TODO: do we need to ramp up the motors if they were stopped? 
-		double gyroRenorm;
-		gyroRenorm = this.getAngle() - gyroStartingAngle;
-		gyroRenorm -= targetAngle; //-starting??
-		gyroRenorm = gyroRenorm % 360;
+		double angleToTurnTo;
+		angleToTurnTo = this.getAngle() - gyroStartingAngle;
+		angleToTurnTo = angleToTurnTo - targetAngle; //-starting??
+		angleToTurnTo = angleToTurnTo % 360;
 
 		//System.out.print(gyro + " ");
-		if (gyroRenorm > 0) {
-			if (gyroRenorm < 180) {
+		if (angleToTurnTo > 0) {
+			if (angleToTurnTo < 180) {
 				rotate(-1);	//to the left (CCW)
 			} else {
 				rotate(+1);
 			}
 		}
-		if (gyroRenorm < 0) {
-			if (gyroRenorm < -180) {
-				rotate(-1);
+		if (angleToTurnTo < 0) {
+			if (angleToTurnTo < -180) {
+				rotate(+1);		//the signs here might be backwards
 			} else {
-				rotate(+1);
+				rotate(-1);
 			}
 		}
-		if (gyroRenorm == 0) isTurning = false;
+		//stop when within 5 degrees of target
+		//TODO: use PID to slow to angle		
+		if (Math.abs(angleToTurnTo) < 5) isTurning = false;
+		
 	}
+	
 	void rotate (int dir) {
 		if (!isTurning) {
 			driveTrain.arcadeDrive(0, 0, false);
 			return;
 		}
+		
 		if (dir == +1) {
-			driveTrain.arcadeDrive(0, 0.7, false);
+			driveTrain.arcadeDrive(0, GYROAUTOSPEED, false);
 		}
 		if (dir == -1) {
-			driveTrain.arcadeDrive(0, -0.7, false);
+			driveTrain.arcadeDrive(0, -GYROAUTOSPEED, false);
 		}
 
 	}

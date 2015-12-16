@@ -77,10 +77,10 @@ public class AutoProgram {
 	void run(){
 		switch(programUsed) {
 		case AUTO_RECYCLE:
-			autoRecycle();
+			//autoRecycle();  DISABLE FOR DEBUG
 			break;
 		case AUTO_TOTE:
-			autoTote();
+			//autoTote();  DEBUG
 			break;
 		case AUTO_MULTITOTE:
 			break;

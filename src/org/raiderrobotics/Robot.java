@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Joystick.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import static org.raiderrobotics.RobotMap.*;
 
 import com.ni.vision.NIVision;
@@ -19,6 +18,7 @@ public class Robot extends IterativeRobot {
 	RobotDrive driveTrain1;
 	Talon talon1, talon2;
 	DriveTrainGyro gyro1;
+	LCDwriter LCDdisplay;
 	Encoder encodeDriveL, encodeDriveR;
 	ArmControl armControl;
 	BinArmSystem binArmSystem;
@@ -44,6 +44,7 @@ public class Robot extends IterativeRobot {
 		driveTrain1.setInvertedMotor(RobotDrive.MotorType.kRearRight,true);
 
 		gyro1 = new DriveTrainGyro(driveTrain1, GYRO1_PORT);
+		LCDdisplay = new LCDwriter("hello");
 
 		xbox360drive = new Joystick(XBOX0_PORT);
 		xbox360arm = new Joystick(XBOX1_PORT);
@@ -89,6 +90,9 @@ public class Robot extends IterativeRobot {
 	 * Exceptions: joystick driving and speed boost is in normalDrive()
 	 * 	If the arm needs to be controlled by joystick too, then the arm buttons may be moved to ArmControl class
 	 */
+	
+	long time1 = System.currentTimeMillis();
+	
 	public void teleopPeriodic() {
 
 /*		
@@ -102,10 +106,10 @@ public class Robot extends IterativeRobot {
 		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientYAxis();
 */
 		//these buttons are arranged based on their layout on the Xbox controller (0, 90, 180, 270)
-		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orientZero();
-		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.orient90();		
-		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.orient180();
-		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orient270();
+		if (xbox360drive.getRawButton(XBOX_BTN_Y)) gyro1.orient(0.0);
+		if (xbox360drive.getRawButton(XBOX_BTN_B)) gyro1.orient(90.0);		
+		if (xbox360drive.getRawButton(XBOX_BTN_A)) gyro1.orient(180.0);
+		if (xbox360drive.getRawButton(XBOX_BTN_X)) gyro1.orient(270.0);
 		
 		
 		normalDrive();
@@ -113,7 +117,13 @@ public class Robot extends IterativeRobot {
 		armControl.tick();
 
 		binArmSystem.tick();
-
+		
+		//only do this every second
+		if (System.currentTimeMillis() - time1 > 1000 ) { 
+			time1 = System.currentTimeMillis();
+			LCDdisplay.writeString("angle="+gyro1.getAngle() ,1);
+		}
+		
 		if (gyro1.isTurning()) gyro1.continueTurning();
 	}
 
